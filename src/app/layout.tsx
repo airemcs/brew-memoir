@@ -8,7 +8,7 @@ const manrope = Manrope({
 });
 
 export const metadata: Metadata = {
-  title: "Calyx & Crema | Beverage Tracker",
+  title: "Brew Memoir | Beverage Tracker",
   description: "Your personal beverage journal — log, rate, and revisit every sip.",
 };
 
