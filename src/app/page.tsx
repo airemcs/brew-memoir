@@ -15,7 +15,7 @@ function getOverviewStats(): OverviewStats["currentMonth"] {
   return {
     totalSpent: 212.8,
     totalDrinks: 42,
-    averagePerDrink: 5.85,
+    averagePerDrink: 1300.5,
     topChoices: ["Ceremonial Matcha", "Hojicha Latte", "Ethiopian Pour Over"],
     categoryBreakdown: [
       { category: "Coffee", count: 27, total: 138.32, percentage: 65 },
@@ -40,9 +40,9 @@ function getRecentEntries(): (IEntry & { displayDate: string })[] {
       category: "Matcha",
       date: new Date().toISOString(),
       displayDate: "Today, 10:15 AM",
-      basePrice: 7.25,
+      basePrice: 107.25,
       addOns: [],
-      totalPrice: 7.25,
+      totalPrice: 107.25,
       rating: 5,
       tastingNotes: [],
       createdAt: new Date().toISOString(),
@@ -56,9 +56,9 @@ function getRecentEntries(): (IEntry & { displayDate: string })[] {
       category: "Hojicha",
       date: new Date(Date.now() - 86400000).toISOString(),
       displayDate: "Yesterday",
-      basePrice: 6.5,
+      basePrice: 106.5,
       addOns: [],
-      totalPrice: 6.5,
+      totalPrice: 106.5,
       rating: 4,
       tastingNotes: [],
       createdAt: new Date().toISOString(),
@@ -72,9 +72,9 @@ function getRecentEntries(): (IEntry & { displayDate: string })[] {
       category: "Coffee",
       date: "2024-09-12T09:00:00.000Z",
       displayDate: "Sep 12",
-      basePrice: 7.0,
+      basePrice: 107.0,
       addOns: [],
-      totalPrice: 7.0,
+      totalPrice: 107.0,
       rating: 5,
       tastingNotes: [],
       createdAt: new Date().toISOString(),
@@ -88,9 +88,9 @@ function getRecentEntries(): (IEntry & { displayDate: string })[] {
       category: "Fruit & Refresher",
       date: "2024-09-11T14:30:00.000Z",
       displayDate: "Sep 11",
-      basePrice: 5.5,
+      basePrice: 105.5,
       addOns: [],
-      totalPrice: 5.5,
+      totalPrice: 105.5,
       rating: 4,
       tastingNotes: [],
       createdAt: new Date().toISOString(),
@@ -102,6 +102,13 @@ function getRecentEntries(): (IEntry & { displayDate: string })[] {
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
+
+function formatPrice(amount: number): string {
+  return amount.toLocaleString("en-PH", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+}
 
 const CATEGORY_ICON: Record<BeverageCategory, string> = {
   Coffee: "coffee",
@@ -212,7 +219,7 @@ export default function HomePage() {
                   Total Spend
                 </span>
                 <div className="text-2xl font-bold tracking-tight text-primary">
-                  ₱{stats.totalSpent.toFixed(2)}
+                  ₱{formatPrice(stats.totalSpent)}
                 </div>
               </div>
               <div className="space-y-0.5">
@@ -220,7 +227,7 @@ export default function HomePage() {
                   Avg / Drink
                 </span>
                 <div className="text-2xl font-bold tracking-tight text-on-surface">
-                  ₱{stats.averagePerDrink.toFixed(2)}
+                  ₱{formatPrice(stats.averagePerDrink)}
                 </div>
               </div>
             </div>
@@ -339,7 +346,7 @@ export default function HomePage() {
                       </div>
                     </div>
                     <div className="font-bold text-sm text-on-surface">
-                      ₱{entry.totalPrice.toFixed(2)}
+                      ₱{formatPrice(entry.totalPrice)}
                     </div>
                   </div>
 
