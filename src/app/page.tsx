@@ -176,16 +176,10 @@ export default function HomePage() {
             Journal
           </Link>
           <Link
-            href="/brew-guides"
+            href="/cafes"
             className="text-on-surface-variant text-[10px] uppercase tracking-widest hover:text-primary transition-colors"
           >
-            Brew Guides
-          </Link>
-          <Link
-            href="/origins"
-            className="text-on-surface-variant text-[10px] uppercase tracking-widest hover:text-primary transition-colors"
-          >
-            Origins
+            Cafes
           </Link>
           <Link
             href="/profile"
@@ -195,12 +189,21 @@ export default function HomePage() {
           </Link>
         </nav>
 
-        <button
-          aria-label="Notifications"
-          className="material-symbols-outlined text-on-surface-variant p-1.5 hover:bg-surface-container rounded-full transition-colors text-xl"
-        >
-          notifications
-        </button>
+        <div className="flex items-center gap-2">
+          <Link
+            href="/entry/new"
+            className="hidden md:flex items-center gap-1.5 bg-primary text-on-primary px-4 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-widest hover:bg-primary-dim active:scale-95 transition-all"
+          >
+            <span className="material-symbols-outlined text-sm">add</span>
+            Add Log
+          </Link>
+          <button
+            aria-label="Notifications"
+            className="material-symbols-outlined text-on-surface-variant p-1.5 hover:bg-surface-container rounded-full transition-colors text-xl"
+          >
+            notifications
+          </button>
+        </div>
       </header>
 
       {/* ── Main content ── */}
@@ -391,23 +394,12 @@ export default function HomePage() {
           </span>
         </Link>
         <Link
-          href="/brew-guides"
+          href="/cafes"
           className="flex flex-col items-center justify-center text-on-surface-variant px-3 py-1 hover:text-primary transition-all"
         >
-          <span className="material-symbols-outlined text-xl">
-            temp_preferences_custom
-          </span>
+          <span className="material-symbols-outlined text-xl">store</span>
           <span className="text-[9px] uppercase tracking-widest font-medium mt-0.5">
-            Guides
-          </span>
-        </Link>
-        <Link
-          href="/origins"
-          className="flex flex-col items-center justify-center text-on-surface-variant px-3 py-1 hover:text-primary transition-all"
-        >
-          <span className="material-symbols-outlined text-xl">public</span>
-          <span className="text-[9px] uppercase tracking-widest font-medium mt-0.5">
-            Origins
+            Cafes
           </span>
         </Link>
         <Link
