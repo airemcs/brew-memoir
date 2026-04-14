@@ -75,7 +75,7 @@ function getRecentEntries(): (IEntry & { displayDate: string })[] {
       basePrice: 107.0,
       addOns: [],
       totalPrice: 107.0,
-      rating: 5,
+      rating: 4.5,
       tastingNotes: [],
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
@@ -125,14 +125,18 @@ const CATEGORY_ICON: Record<BeverageCategory, string> = {
 function Stars({ rating }: { rating: number }) {
   return (
     <div className="flex items-center gap-0.5 text-primary">
-      {Array.from({ length: 5 }, (_, i) => (
-        <span
-          key={i}
-          className={`material-symbols-outlined text-sm${i < rating ? " filled" : ""}`}
-        >
-          star
-        </span>
-      ))}
+      {Array.from({ length: 5 }, (_, i) => {
+        const full = rating >= i + 1;
+        const half = !full && rating >= i + 0.5;
+        return (
+          <span
+            key={i}
+            className={`material-symbols-outlined text-sm${full ? " filled" : ""}`}
+          >
+            {full ? "star" : half ? "star_half" : "star"}
+          </span>
+        );
+      })}
     </div>
   );
 }
