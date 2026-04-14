@@ -85,7 +85,7 @@ function getRecentEntries(): (IEntry & { displayDate: string })[] {
       userId: "static",
       cafeName: "Tea Atelier",
       beverageName: "White Peony Loose Leaf",
-      category: "Tea",
+      category: "Fruit & Refresher",
       date: "2024-09-11T14:30:00.000Z",
       displayDate: "Sep 11",
       basePrice: 5.5,
@@ -277,7 +277,7 @@ export default function HomePage() {
                 ))}
               </div>
 
-              <div className="border-t border-surface-variant/50 pt-4 flex items-center gap-3">
+              <div className="pt-1 flex items-center gap-3">
                 {/* Cafe photo — swap src for topCafe.photoUrl when backend is ready */}
                 <div className="w-12 h-12 rounded-lg bg-black shrink-0 overflow-hidden">
                   {topCafe.photoUrl && (
