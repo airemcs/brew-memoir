@@ -189,7 +189,7 @@ export default function HomePage() {
       {/* ── Main content ── */}
       <main className="pt-16 pb-24 px-4 max-w-5xl mx-auto">
         {/* Hero summary */}
-        <section className="mb-8">
+        <section className="mb-8 pt-4">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
             <div className="space-y-1">
               <span className="text-[0.625rem] font-medium uppercase tracking-widest text-on-surface-variant">
