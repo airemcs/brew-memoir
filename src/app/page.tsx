@@ -25,13 +25,18 @@ function getOverviewStats(): OverviewStats["currentMonth"] {
   };
 }
 
+// Swap for a real aggregation query (e.g. top cafe by visit count this month)
+function getTopCafe(): { name: string; visits: number; photoUrl: string | null } {
+  return { name: "Onyx Coffee Lab", visits: 8, photoUrl: null };
+}
+
 function getRecentEntries(): (IEntry & { displayDate: string })[] {
   return [
     {
       _id: "static-1",
       userId: "static",
-      cafeName: "Uji Tea House",
-      beverageName: "Ceremonial Grade Matcha Latte",
+      cafeName: "Matcha Latte",
+      beverageName: "Starbucks",
       category: "Matcha",
       date: new Date().toISOString(),
       displayDate: "Today, 10:15 AM",
@@ -132,6 +137,7 @@ function Stars({ rating }: { rating: number }) {
 export default function HomePage() {
   const month = getMonthLabel();
   const stats = getOverviewStats();
+  const topCafe = getTopCafe();
   const entries = getRecentEntries();
 
   const categoryText = stats.categoryBreakdown
@@ -243,20 +249,56 @@ export default function HomePage() {
               </div>
             </div>
 
-            {/* Top choices card */}
-            <div className="bg-secondary-container p-6 rounded-xl space-y-3">
-              <span className="text-[0.625rem] font-bold uppercase tracking-widest text-on-secondary-container">
-                Top Choice
-              </span>
-              <div className="flex flex-wrap gap-2">
-                {stats.topChoices.map((choice) => (
-                  <span
-                    key={choice}
-                    className="px-3 py-1 bg-surface-container-lowest text-on-secondary-container text-[10px] font-semibold rounded-full shadow-sm"
-                  >
-                    {choice}
-                  </span>
+            {/* Sensory Palate Overview card */}
+            <div className="bg-surface-container-low p-6 rounded-xl space-y-4">
+              <h3 className="font-bold text-sm tracking-tight text-on-surface">
+                Sensory Palate Overview
+              </h3>
+
+              {/* Category bars */}
+              <div className="space-y-3">
+                {stats.categoryBreakdown.map((item) => (
+                  <div key={item.category}>
+                    <div className="flex justify-between items-baseline mb-1.5">
+                      <span className="text-[0.625rem] font-bold uppercase tracking-widest text-on-surface-variant">
+                        {item.category}
+                      </span>
+                      <span className="text-[0.625rem] text-on-surface-variant">
+                        {item.percentage}%
+                      </span>
+                    </div>
+                    <div className="h-px bg-surface-container-high relative">
+                      <div
+                        className="absolute inset-y-0 left-0 bg-primary"
+                        style={{ width: `${item.percentage}%` }}
+                      />
+                    </div>
+                  </div>
                 ))}
+              </div>
+
+              <div className="border-t border-surface-variant/50 pt-4 flex items-center gap-3">
+                {/* Cafe photo — swap src for topCafe.photoUrl when backend is ready */}
+                <div className="w-12 h-12 rounded-lg bg-black shrink-0 overflow-hidden">
+                  {topCafe.photoUrl && (
+                    <img
+                      src={topCafe.photoUrl}
+                      alt={topCafe.name}
+                      className="w-full h-full object-cover"
+                    />
+                  )}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <span className="text-[0.625rem] font-bold uppercase tracking-widest text-primary block">
+                    Top Roastery
+                  </span>
+                  <span className="font-bold text-sm text-on-surface truncate block">
+                    {topCafe.name}
+                  </span>
+                </div>
+                <span className="px-3 py-1 bg-primary-container text-on-primary-container text-[10px] font-bold rounded-full shrink-0">
+                  {topCafe.visits} visits
+                </span>
               </div>
             </div>
           </div>
