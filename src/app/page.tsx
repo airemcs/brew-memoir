@@ -1,65 +1,372 @@
-import Image from "next/image";
+import Link from "next/link";
+import type { BeverageCategory, IEntry, OverviewStats } from "@/types";
 
-export default function Home() {
+// ---------------------------------------------------------------------------
+// Data layer — replace these with async DB / API calls when backend is ready.
+// The return types intentionally match the shared types in src/types/index.ts
+// so swapping in real data requires only changing the function bodies.
+// ---------------------------------------------------------------------------
+
+function getMonthLabel(): string {
+  return "September";
+}
+
+function getOverviewStats(): OverviewStats["currentMonth"] {
+  return {
+    totalSpent: 212.8,
+    totalDrinks: 42,
+    averagePerDrink: 5.85,
+    topChoices: ["Ceremonial Matcha", "Hojicha Latte", "Ethiopian Pour Over"],
+    categoryBreakdown: [
+      { category: "Coffee", count: 27, total: 138.32, percentage: 65 },
+      { category: "Matcha", count: 9, total: 48.6, percentage: 21 },
+      { category: "Tea", count: 6, total: 25.88, percentage: 14 },
+    ],
+  };
+}
+
+function getRecentEntries(): (IEntry & { displayDate: string })[] {
+  return [
+    {
+      _id: "static-1",
+      userId: "static",
+      cafeName: "Uji Tea House",
+      beverageName: "Ceremonial Grade Matcha Latte",
+      category: "Matcha",
+      date: new Date().toISOString(),
+      displayDate: "Today, 10:15 AM",
+      basePrice: 7.25,
+      addOns: [],
+      totalPrice: 7.25,
+      rating: 5,
+      tastingNotes: [],
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    },
+    {
+      _id: "static-2",
+      userId: "static",
+      cafeName: "Kurasu",
+      beverageName: "Toasted Hojicha Flat White",
+      category: "Hojicha",
+      date: new Date(Date.now() - 86400000).toISOString(),
+      displayDate: "Yesterday",
+      basePrice: 6.5,
+      addOns: [],
+      totalPrice: 6.5,
+      rating: 4,
+      tastingNotes: [],
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    },
+    {
+      _id: "static-3",
+      userId: "static",
+      cafeName: "Sightglass",
+      beverageName: "V60 Pour Over (Ethiopia)",
+      category: "Coffee",
+      date: "2024-09-12T09:00:00.000Z",
+      displayDate: "Sep 12",
+      basePrice: 7.0,
+      addOns: [],
+      totalPrice: 7.0,
+      rating: 5,
+      tastingNotes: [],
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    },
+    {
+      _id: "static-4",
+      userId: "static",
+      cafeName: "Tea Atelier",
+      beverageName: "White Peony Loose Leaf",
+      category: "Tea",
+      date: "2024-09-11T14:30:00.000Z",
+      displayDate: "Sep 11",
+      basePrice: 5.5,
+      addOns: [],
+      totalPrice: 5.5,
+      rating: 4,
+      tastingNotes: [],
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    },
+  ];
+}
+
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+
+const CATEGORY_ICON: Record<BeverageCategory, string> = {
+  Coffee: "coffee",
+  "Espresso & Milk": "coffee",
+  Matcha: "eco",
+  Hojicha: "potted_plant",
+  Tea: "water_drop",
+  Chocolate: "coffee",
+  "Frappe & Blended": "local_drink",
+  "Fruit & Refresher": "local_drink",
+  Specialty: "local_cafe",
+};
+
+function Stars({ rating }: { rating: number }) {
   return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
+    <div className="flex items-center gap-0.5 text-primary">
+      {Array.from({ length: 5 }, (_, i) => (
+        <span
+          key={i}
+          className={`material-symbols-outlined text-sm${i < rating ? " filled" : ""}`}
+        >
+          star
+        </span>
+      ))}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Page (Server Component)
+// ---------------------------------------------------------------------------
+
+export default function HomePage() {
+  const month = getMonthLabel();
+  const stats = getOverviewStats();
+  const entries = getRecentEntries();
+
+  const categoryText = stats.categoryBreakdown
+    .map((c) => `${c.percentage}% ${c.category}`)
+    .join(", ");
+
+  return (
+    <>
+      {/* ── Top App Bar ── */}
+      <header className="fixed top-0 left-0 w-full z-50 bg-surface flex justify-between items-center px-4 py-3">
+        <div className="flex items-center gap-2">
+          <span className="material-symbols-outlined text-primary text-xl">
+            local_cafe
+          </span>
+          <h1 className="text-base font-bold tracking-[-0.02em] text-primary">
+            Calyx &amp; Crema
           </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
         </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+
+        <nav className="hidden md:flex gap-6 items-center">
+          <Link
+            href="/"
+            className="text-primary font-bold text-[10px] uppercase tracking-widest"
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+            Journal
+          </Link>
+          <Link
+            href="/brew-guides"
+            className="text-on-surface-variant text-[10px] uppercase tracking-widest hover:text-primary transition-colors"
           >
-            Documentation
-          </a>
+            Brew Guides
+          </Link>
+          <Link
+            href="/origins"
+            className="text-on-surface-variant text-[10px] uppercase tracking-widest hover:text-primary transition-colors"
+          >
+            Origins
+          </Link>
+          <Link
+            href="/profile"
+            className="text-on-surface-variant text-[10px] uppercase tracking-widest hover:text-primary transition-colors"
+          >
+            Profile
+          </Link>
+        </nav>
+
+        <button
+          aria-label="Notifications"
+          className="material-symbols-outlined text-on-surface-variant p-1.5 hover:bg-surface-container rounded-full transition-colors text-xl"
+        >
+          notifications
+        </button>
+      </header>
+
+      {/* ── Main content ── */}
+      <main className="pt-16 pb-24 px-4 max-w-5xl mx-auto">
+        {/* Hero summary */}
+        <section className="mb-8 pt-4">
+          <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+            <div className="space-y-1">
+              <span className="text-[0.625rem] font-medium uppercase tracking-widest text-on-surface-variant">
+                Monthly Overview
+              </span>
+              <h2 className="text-4xl font-extrabold tracking-[-0.02em] text-on-surface">
+                {month}
+              </h2>
+            </div>
+
+            <div className="flex gap-8 md:gap-12">
+              <div className="space-y-0.5">
+                <span className="text-[0.625rem] font-medium uppercase tracking-widest text-on-surface-variant">
+                  Total Spend
+                </span>
+                <div className="text-2xl font-bold tracking-tight text-primary">
+                  ₱{stats.totalSpent.toFixed(2)}
+                </div>
+              </div>
+              <div className="space-y-0.5">
+                <span className="text-[0.625rem] font-medium uppercase tracking-widest text-on-surface-variant">
+                  Avg / Drink
+                </span>
+                <div className="text-2xl font-bold tracking-tight text-on-surface">
+                  ₱{stats.averagePerDrink.toFixed(2)}
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* Bento grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          {/* Left: stats + top choices */}
+          <div className="lg:col-span-4 space-y-6">
+            {/* Consumption card */}
+            <div className="bg-surface-container-low p-6 rounded-xl space-y-4">
+              <div className="flex items-center justify-between">
+                <span className="material-symbols-outlined text-primary text-xl">
+                  bar_chart
+                </span>
+                <span className="text-[0.625rem] font-bold uppercase tracking-widest text-on-surface-variant">
+                  Consumption
+                </span>
+              </div>
+              <div className="space-y-1">
+                <div className="text-3xl font-bold">{stats.totalDrinks}</div>
+                <p className="text-xs text-on-surface-variant leading-relaxed">
+                  Beverages logged this month. {categoryText}.
+                </p>
+              </div>
+            </div>
+
+            {/* Top choices card */}
+            <div className="bg-secondary-container p-6 rounded-xl space-y-3">
+              <span className="text-[0.625rem] font-bold uppercase tracking-widest text-on-secondary-container">
+                Top Choice
+              </span>
+              <div className="flex flex-wrap gap-2">
+                {stats.topChoices.map((choice) => (
+                  <span
+                    key={choice}
+                    className="px-3 py-1 bg-surface-container-lowest text-on-secondary-container text-[10px] font-semibold rounded-full shadow-sm"
+                  >
+                    {choice}
+                  </span>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Right: recent logs */}
+          <div className="lg:col-span-8">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-bold tracking-tight">Recent Logs</h3>
+              <Link
+                href="/profile/history"
+                className="text-primary text-[10px] font-bold uppercase tracking-widest hover:opacity-80 transition-opacity"
+              >
+                View History
+              </Link>
+            </div>
+
+            <div className="bg-surface-container-low rounded-xl overflow-hidden">
+              {entries.map((entry, idx) => (
+                <Link
+                  key={entry._id}
+                  href={`/entry/${entry._id}`}
+                  className={`flex flex-col p-5 hover:bg-surface-container-high transition-colors group${idx < entries.length - 1 ? " border-b border-surface-variant/50" : ""}`}
+                >
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex items-center gap-4">
+                      <div className="w-10 h-10 flex items-center justify-center rounded-lg bg-surface-container-lowest text-primary group-hover:scale-95 transition-transform">
+                        <span className="material-symbols-outlined text-xl">
+                          {CATEGORY_ICON[entry.category]}
+                        </span>
+                      </div>
+                      <div className="space-y-0.5">
+                        <div className="font-bold text-sm text-on-surface">
+                          {entry.cafeName}
+                        </div>
+                        <div className="text-xs text-on-surface-variant">
+                          {entry.beverageName}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="font-bold text-sm text-on-surface">
+                      ₱{entry.totalPrice.toFixed(2)}
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between pl-14">
+                    <Stars rating={entry.rating} />
+                    <div className="text-[10px] font-medium uppercase tracking-widest text-on-surface-variant opacity-70">
+                      {entry.displayDate}
+                    </div>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </div>
         </div>
       </main>
-    </div>
+
+      {/* ── FAB ── */}
+      <Link
+        href="/entry/new"
+        aria-label="Add new entry"
+        className="fixed bottom-20 right-6 w-12 h-12 bg-primary text-on-primary rounded-xl shadow-xl flex items-center justify-center active:scale-90 transition-transform duration-150 z-50 md:bottom-6"
+      >
+        <span className="material-symbols-outlined text-2xl">add</span>
+      </Link>
+
+      {/* ── Bottom Nav (mobile) ── */}
+      <nav
+        aria-label="Main navigation"
+        className="md:hidden fixed bottom-0 left-0 w-full bg-surface/90 backdrop-blur-xl flex justify-around items-center px-2 py-2 z-50 shadow-[0_-4px_16px_rgba(48,51,49,0.04)]"
+      >
+        <Link
+          href="/"
+          className="flex flex-col items-center justify-center bg-secondary-container text-on-secondary-container rounded-lg px-3 py-1 transition-all"
+        >
+          <span className="material-symbols-outlined text-xl">menu_book</span>
+          <span className="text-[9px] uppercase tracking-widest font-bold mt-0.5">
+            Journal
+          </span>
+        </Link>
+        <Link
+          href="/brew-guides"
+          className="flex flex-col items-center justify-center text-on-surface-variant px-3 py-1 hover:text-primary transition-all"
+        >
+          <span className="material-symbols-outlined text-xl">
+            temp_preferences_custom
+          </span>
+          <span className="text-[9px] uppercase tracking-widest font-medium mt-0.5">
+            Guides
+          </span>
+        </Link>
+        <Link
+          href="/origins"
+          className="flex flex-col items-center justify-center text-on-surface-variant px-3 py-1 hover:text-primary transition-all"
+        >
+          <span className="material-symbols-outlined text-xl">public</span>
+          <span className="text-[9px] uppercase tracking-widest font-medium mt-0.5">
+            Origins
+          </span>
+        </Link>
+        <Link
+          href="/profile"
+          className="flex flex-col items-center justify-center text-on-surface-variant px-3 py-1 hover:text-primary transition-all"
+        >
+          <span className="material-symbols-outlined text-xl">person</span>
+          <span className="text-[9px] uppercase tracking-widest font-medium mt-0.5">
+            Profile
+          </span>
+        </Link>
+      </nav>
+    </>
   );
 }
