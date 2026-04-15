@@ -66,7 +66,7 @@ function getRecentEntries(): (IEntry & { displayDate: string })[] {
       beverageName: "Matcha Latte",
       category: "Matcha",
       date: new Date().toISOString(),
-      displayDate: "Today, 10:15 AM",
+      displayDate: "Today",
       basePrice: 175,
       addOns: [],
       totalPrice: 175,
@@ -264,36 +264,6 @@ export default function HomePage() {
 
         {/* Bento Grid */}
         <div className="grid grid-cols-2 gap-4">
-
-          {/* Sensory Palate Overview */}
-          <div className="col-span-2 bg-surface-container-low p-5 rounded-xl space-y-4">
-            <h3 className="font-bold text-sm tracking-tight text-on-surface">
-              Sensory Palate Overview
-            </h3>
-
-            {/* Category bars */}
-            <div className="space-y-3">
-              {stats.categoryBreakdown.map((item) => (
-                <div key={item.category}>
-                  <div className="flex justify-between items-baseline mb-1.5">
-                    <span className="text-[0.625rem] font-bold uppercase tracking-widest text-on-surface-variant">
-                      {item.category}
-                    </span>
-                    <span className="text-[0.625rem] text-on-surface-variant">
-                      {item.percentage}%
-                    </span>
-                  </div>
-                  <div className="h-1 bg-surface-container-high relative">
-                    <div
-                      className="absolute inset-y-0 left-0 bg-primary"
-                      style={{ width: `${item.percentage}%` }}
-                    />
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
           {/* Most Visited */}
           <div className="bg-surface-container-low rounded-xl p-5 flex flex-col justify-between aspect-square relative overflow-hidden">
             <div className="relative z-10">
@@ -346,6 +316,34 @@ export default function HomePage() {
             </div>
           </div>
 
+          {/* Sensory Palate Overview */}
+          <div className="col-span-2 bg-surface-container-low p-5 rounded-xl space-y-4">
+            <h3 className="font-bold text-sm tracking-tight text-on-surface">
+              Sensory Palate Overview
+            </h3>
+
+            {/* Category bars */}
+            <div className="space-y-3">
+              {stats.categoryBreakdown.map((item) => (
+                <div key={item.category}>
+                  <div className="flex justify-between items-baseline mb-1.5">
+                    <span className="text-[0.625rem] font-bold uppercase tracking-widest text-on-surface-variant">
+                      {item.category}
+                    </span>
+                    <span className="text-[0.625rem] text-on-surface-variant">
+                      {item.percentage}%
+                    </span>
+                  </div>
+                  <div className="h-1 bg-surface-container-high relative">
+                    <div
+                      className="absolute inset-y-0 left-0 bg-primary"
+                      style={{ width: `${item.percentage}%` }}
+                    />
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
 
         {/* Recent Logs */}
@@ -376,7 +374,7 @@ export default function HomePage() {
                     <div className="space-y-0.5">
                       <div className="font-bold text-sm text-on-surface">{entry.beverageName}</div>
                       <div className="text-xs text-on-surface-variant">
-                        {entry.cafeName}
+                        {entry.cafeName}{entry.cafeCity ? ` · ${entry.cafeCity}` : ""}
                       </div>
                     </div>
                   </div>
