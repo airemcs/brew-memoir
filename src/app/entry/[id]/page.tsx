@@ -6,7 +6,8 @@ import type { BeverageCategory, IEntry } from "@/types";
 // Data layer — replace with: GET /api/entries/:id
 // ---------------------------------------------------------------------------
 
-const STATIC_ENTRIES: (IEntry & { displayDate: string })[] = [
+// cafeId links back to /cafes/[id] — replace with real FK from DB
+const STATIC_ENTRIES: (IEntry & { displayDate: string; cafeId?: string })[] = [
   {
     _id: "static-1",
     userId: "static",
@@ -35,6 +36,7 @@ const STATIC_ENTRIES: (IEntry & { displayDate: string })[] = [
     beverageName: "Toasted Hojicha Flat White",
     cafeName: "Kurasu",
     cafeCity: "Poblacion, Makati",
+    cafeId: "cafe-2",
     category: "Hojicha",
     date: new Date(Date.now() - 86400000).toISOString(),
     displayDate: "Yesterday",
@@ -52,7 +54,8 @@ const STATIC_ENTRIES: (IEntry & { displayDate: string })[] = [
     userId: "static",
     beverageName: "V60 Pour Over (Ethiopia)",
     cafeName: "Sightglass",
-    cafeCity: "Salcedo Village, Makati",
+    cafeCity: "Legazpi Village, Makati",
+    cafeId: "cafe-3",
     category: "Coffee",
     date: "2024-09-12T09:00:00.000Z",
     displayDate: "Sep 12",
@@ -80,6 +83,96 @@ const STATIC_ENTRIES: (IEntry & { displayDate: string })[] = [
     addOns: [],
     totalPrice: 105.5,
     rating: 4,
+    tastingNotes: [],
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
+  {
+    _id: "static-5",
+    userId: "static",
+    beverageName: "Single Origin Pourover",
+    cafeName: "Yardstick Coffee",
+    cafeCity: "Salcedo Village, Makati",
+    cafeId: "cafe-1",
+    category: "Coffee",
+    date: "2024-10-24T09:00:00.000Z",
+    displayDate: "Oct 24",
+    basePrice: 280,
+    addOns: [],
+    totalPrice: 280,
+    rating: 5,
+    tastingNotes: [],
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
+  {
+    _id: "static-6",
+    userId: "static",
+    beverageName: "Iced Spanish Latte",
+    cafeName: "Yardstick Coffee",
+    cafeCity: "Salcedo Village, Makati",
+    cafeId: "cafe-1",
+    category: "Espresso & Milk",
+    date: "2024-10-21T10:30:00.000Z",
+    displayDate: "Oct 21",
+    basePrice: 240,
+    addOns: [],
+    totalPrice: 240,
+    rating: 4,
+    tastingNotes: [],
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
+  {
+    _id: "static-7",
+    userId: "static",
+    beverageName: "Peachy Flat White",
+    cafeName: "The Curator",
+    cafeCity: "Legazpi Village, Makati",
+    cafeId: "cafe-4",
+    category: "Espresso & Milk",
+    date: "2024-09-30T09:45:00.000Z",
+    displayDate: "Sept 30",
+    basePrice: 290,
+    addOns: [],
+    totalPrice: 290,
+    rating: 4.5,
+    tastingNotes: [],
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
+  {
+    _id: "static-8",
+    userId: "static",
+    beverageName: "Iced Matcha Latte",
+    cafeName: "Commune",
+    cafeCity: "Kapitolyo, Pasig",
+    cafeId: "cafe-5",
+    category: "Matcha",
+    date: "2024-09-22T13:00:00.000Z",
+    displayDate: "Sept 22",
+    basePrice: 260,
+    addOns: [],
+    totalPrice: 260,
+    rating: 4,
+    tastingNotes: [],
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+  },
+  {
+    _id: "static-9",
+    userId: "static",
+    beverageName: "Benguet Drip Coffee",
+    cafeName: "Kalsada Coffee",
+    cafeCity: "Katipunan, Quezon City",
+    cafeId: "cafe-6",
+    category: "Coffee",
+    date: "2024-09-10T09:00:00.000Z",
+    displayDate: "Sept 10",
+    basePrice: 180,
+    addOns: [],
+    totalPrice: 180,
+    rating: 4.5,
     tastingNotes: [],
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
@@ -218,7 +311,18 @@ export default async function EntryDetailPage({ params }: { params: Promise<{ id
               <span className="text-[0.75rem] uppercase tracking-[0.1em] font-bold text-on-surface-variant">
                 The Venue
               </span>
-              <h3 className="text-base font-bold text-on-surface mt-1">{entry.cafeName}</h3>
+              {entry.cafeId ? (
+                <Link href={`/cafes/${entry.cafeId}`} className="group flex items-center gap-1 mt-1">
+                  <h3 className="text-base font-bold text-on-surface group-hover:text-primary transition-colors">
+                    {entry.cafeName}
+                  </h3>
+                  <span className="material-symbols-outlined text-sm text-on-surface-variant group-hover:text-primary transition-colors">
+                    arrow_forward
+                  </span>
+                </Link>
+              ) : (
+                <h3 className="text-base font-bold text-on-surface mt-1">{entry.cafeName}</h3>
+              )}
               {entry.cafeCity && (
                 <p className="text-sm text-on-surface-variant mt-0.5">{entry.cafeCity}</p>
               )}

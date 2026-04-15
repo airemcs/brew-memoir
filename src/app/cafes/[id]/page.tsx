@@ -33,24 +33,17 @@ const STATIC_CAFES: CafeDetail[] = [
     weeklyAverage: 3.2,
     entries: [
       {
-        _id: "e1-1", userId: "static", cafeName: "Yardstick Coffee", cafeCity: "Salcedo Village, Makati",
+        _id: "static-5", userId: "static", cafeName: "Yardstick Coffee", cafeCity: "Salcedo Village, Makati",
         beverageName: "Single Origin Pourover", category: "Coffee",
         date: "2024-10-24T09:00:00.000Z", displayDate: "Oct 24, 2024",
         basePrice: 280, addOns: [], totalPrice: 280, rating: 5,
         tastingNotes: [], createdAt: "", updatedAt: "",
       },
       {
-        _id: "e1-2", userId: "static", cafeName: "Yardstick Coffee", cafeCity: "Salcedo Village, Makati",
+        _id: "static-6", userId: "static", cafeName: "Yardstick Coffee", cafeCity: "Salcedo Village, Makati",
         beverageName: "Iced Spanish Latte", category: "Espresso & Milk",
         date: "2024-10-21T10:30:00.000Z", displayDate: "Oct 21, 2024",
         basePrice: 240, addOns: [], totalPrice: 240, rating: 4,
-        tastingNotes: [], createdAt: "", updatedAt: "",
-      },
-      {
-        _id: "e1-3", userId: "static", cafeName: "Yardstick Coffee", cafeCity: "Salcedo Village, Makati",
-        beverageName: "Filter Blend No. 3", category: "Coffee",
-        date: "2024-10-15T08:45:00.000Z", displayDate: "Oct 15, 2024",
-        basePrice: 260, addOns: [], totalPrice: 260, rating: 4.5,
         tastingNotes: [], createdAt: "", updatedAt: "",
       },
     ],
@@ -66,17 +59,10 @@ const STATIC_CAFES: CafeDetail[] = [
     weeklyAverage: 1.8,
     entries: [
       {
-        _id: "e2-1", userId: "static", cafeName: "Kurasu", cafeCity: "Poblacion, Makati",
+        _id: "static-2", userId: "static", cafeName: "Kurasu", cafeCity: "Poblacion, Makati",
         beverageName: "Toasted Hojicha Flat White", category: "Hojicha",
         date: "2024-10-15T14:00:00.000Z", displayDate: "Oct 15, 2024",
         basePrice: 320, addOns: [], totalPrice: 320, rating: 4,
-        tastingNotes: [], createdAt: "", updatedAt: "",
-      },
-      {
-        _id: "e2-2", userId: "static", cafeName: "Kurasu", cafeCity: "Poblacion, Makati",
-        beverageName: "Matcha Latte", category: "Matcha",
-        date: "2024-10-08T11:00:00.000Z", displayDate: "Oct 08, 2024",
-        basePrice: 290, addOns: [], totalPrice: 290, rating: 4.5,
         tastingNotes: [], createdAt: "", updatedAt: "",
       },
     ],
@@ -92,7 +78,7 @@ const STATIC_CAFES: CafeDetail[] = [
     weeklyAverage: 2.4,
     entries: [
       {
-        _id: "e3-1", userId: "static", cafeName: "Sightglass", cafeCity: "Legazpi Village, Makati",
+        _id: "static-3", userId: "static", cafeName: "Sightglass", cafeCity: "Legazpi Village, Makati",
         beverageName: "V60 Pour Over (Ethiopia)", category: "Coffee",
         date: "2024-10-08T09:00:00.000Z", displayDate: "Oct 08, 2024",
         basePrice: 210, addOns: [], totalPrice: 210, rating: 4.5,
@@ -111,7 +97,7 @@ const STATIC_CAFES: CafeDetail[] = [
     weeklyAverage: 1.5,
     entries: [
       {
-        _id: "e4-1", userId: "static", cafeName: "The Curator", cafeCity: "Legazpi Village, Makati",
+        _id: "static-7", userId: "static", cafeName: "The Curator", cafeCity: "Legazpi Village, Makati",
         beverageName: "Peachy Flat White", category: "Espresso & Milk",
         date: "2024-09-30T09:45:00.000Z", displayDate: "Sept 30, 2024",
         basePrice: 290, addOns: [], totalPrice: 290, rating: 4.5,
@@ -130,7 +116,7 @@ const STATIC_CAFES: CafeDetail[] = [
     weeklyAverage: 1.2,
     entries: [
       {
-        _id: "e5-1", userId: "static", cafeName: "Commune", cafeCity: "Kapitolyo, Pasig",
+        _id: "static-8", userId: "static", cafeName: "Commune", cafeCity: "Kapitolyo, Pasig",
         beverageName: "Iced Matcha Latte", category: "Matcha",
         date: "2024-09-22T13:00:00.000Z", displayDate: "Sept 22, 2024",
         basePrice: 260, addOns: [], totalPrice: 260, rating: 4,
@@ -149,7 +135,7 @@ const STATIC_CAFES: CafeDetail[] = [
     weeklyAverage: 0.9,
     entries: [
       {
-        _id: "e6-1", userId: "static", cafeName: "Kalsada Coffee", cafeCity: "Katipunan, Quezon City",
+        _id: "static-9", userId: "static", cafeName: "Kalsada Coffee", cafeCity: "Katipunan, Quezon City",
         beverageName: "Benguet Drip Coffee", category: "Coffee",
         date: "2024-09-10T09:00:00.000Z", displayDate: "Sept 10, 2024",
         basePrice: 180, addOns: [], totalPrice: 180, rating: 4.5,
