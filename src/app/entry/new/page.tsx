@@ -372,10 +372,10 @@ export default function NewEntryPage() {
             Cafes
           </Link>
           <Link
-            href="/profile"
+            href="/profile/history"
             className="text-on-surface-variant text-[10px] uppercase tracking-widest hover:text-primary transition-colors"
           >
-            Profile
+            History
           </Link>
         </nav>
 
@@ -767,11 +767,11 @@ export default function NewEntryPage() {
           <span className="text-[9px] uppercase tracking-widest font-medium mt-0.5">Cafes</span>
         </Link>
         <Link
-          href="/profile"
+          href="/profile/history"
           className="flex flex-col items-center justify-center text-on-surface-variant px-3 py-1 hover:text-primary transition-all"
         >
-          <span className="material-symbols-outlined text-xl">person</span>
-          <span className="text-[9px] uppercase tracking-widest font-medium mt-0.5">Profile</span>
+          <span className="material-symbols-outlined text-xl">history</span>
+          <span className="text-[9px] uppercase tracking-widest font-medium mt-0.5">History</span>
         </Link>
       </nav>
     </>
