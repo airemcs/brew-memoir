@@ -370,8 +370,8 @@ export default function HomePage() {
                       </span>
                     </div>
                     <div className="space-y-0.5">
-                      <div className="font-bold text-sm text-on-surface">{entry.cafeName}</div>
-                      <div className="text-xs text-on-surface-variant">{entry.beverageName}</div>
+                      <div className="font-bold text-sm text-on-surface">{entry.beverageName}</div>
+                      <div className="text-xs text-on-surface-variant">{entry.cafeName}</div>
                     </div>
                   </div>
                   <div className="font-bold text-sm text-on-surface">
