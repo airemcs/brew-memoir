@@ -208,7 +208,16 @@ export default function NewEntryPage() {
   const [cafeCity, setCafeCity] = useState("");
   const [basePrice, setBasePrice] = useState("");
   const [personalNotes, setPersonalNotes] = useState("");
+  const [photoPreview, setPhotoPreview] = useState<string | null>(null);
   const [submitted, setSubmitted] = useState(false);
+  const photoInputRef = useRef<HTMLInputElement>(null);
+
+  function handlePhotoChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const url = URL.createObjectURL(file);
+    setPhotoPreview(url);
+  }
 
   useEffect(() => {
     document.body.style.overflow = showSheet ? "hidden" : "";
@@ -261,8 +270,8 @@ export default function NewEntryPage() {
         </div>
 
         {/* Summary card */}
-        <section className="w-full bg-surface-container-low p-8 rounded-xl mb-12 text-left">
-          <div className="flex flex-col gap-6">
+        <section className="w-full bg-surface-container-low rounded-xl mb-12 text-left overflow-hidden">
+          <div className="flex flex-col gap-6 p-8">
             <div className="flex justify-between items-start">
               <div className="space-y-1">
                 <span className="text-[10px] uppercase tracking-[0.2em] font-bold text-on-surface-variant">Beverage</span>
@@ -281,11 +290,18 @@ export default function NewEntryPage() {
                 <p className="text-xs text-on-surface-variant mt-0.5">{cafeCity}</p>
               )}
             </div>
-            {personalNotes.trim() && (
-              <div className="pt-4 border-t border-outline-variant/10 space-y-1">
-                <p className="text-sm font-medium text-on-surface-variant italic leading-relaxed">
-                  &ldquo;{personalNotes.trim()}&rdquo;
-                </p>
+            {(photoPreview || personalNotes.trim()) && (
+              <div className="pt-4 border-t border-outline-variant/10 flex items-center gap-3">
+                {photoPreview && (
+                  <div className="shrink-0 w-8 h-8 rounded-full overflow-hidden bg-surface-variant">
+                    <img src={photoPreview} alt={beverageName} className="w-full h-full object-cover" />
+                  </div>
+                )}
+                {personalNotes.trim() && (
+                  <p className="text-xs font-medium text-on-surface-variant italic leading-relaxed">
+                    &ldquo;{personalNotes.trim()}&rdquo;
+                  </p>
+                )}
               </div>
             )}
           </div>
@@ -419,6 +435,41 @@ export default function NewEntryPage() {
                 );
               })}
             </div>
+          </section>
+
+          {/* Photo Upload */}
+          <section>
+            <label className="text-[0.75rem] uppercase tracking-widest font-bold text-on-surface-variant block mb-3">
+              Photo
+            </label>
+            <input
+              ref={photoInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={handlePhotoChange}
+            />
+            {photoPreview ? (
+              <div className="relative w-full aspect-square rounded-xl overflow-hidden bg-surface-container-low">
+                <img src={photoPreview} alt="Preview" className="w-full h-full object-cover" />
+                <button
+                  type="button"
+                  onClick={() => { setPhotoPreview(null); if (photoInputRef.current) photoInputRef.current.value = ""; }}
+                  className="absolute top-3 right-3 w-8 h-8 rounded-full bg-inverse-surface/60 backdrop-blur-sm flex items-center justify-center text-inverse-on-surface hover:bg-inverse-surface/80 transition-colors"
+                >
+                  <span className="material-symbols-outlined text-base">close</span>
+                </button>
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => photoInputRef.current?.click()}
+                className="w-full aspect-video rounded-xl border-2 border-dashed border-outline-variant/40 bg-surface-container-low/50 hover:bg-surface-container-low hover:border-primary/30 transition-all flex flex-col items-center justify-center gap-3 text-on-surface-variant"
+              >
+                <span className="material-symbols-outlined text-3xl">add_photo_alternate</span>
+                <span className="text-sm font-medium">Tap to add a photo</span>
+              </button>
+            )}
           </section>
 
           {/* Basic Info */}
