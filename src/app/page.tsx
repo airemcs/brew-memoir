@@ -1,5 +1,5 @@
 import Link from "next/link";
-import type { BeverageCategory, CategoryBreakdown, IEntry, OverviewStats } from "@/types";
+import type { BeverageCategory, IEntry, OverviewStats } from "@/types";
 
 // ---------------------------------------------------------------------------
 // Data layer — replace these with async DB / API calls when backend is ready.
@@ -7,27 +7,48 @@ import type { BeverageCategory, CategoryBreakdown, IEntry, OverviewStats } from 
 // so swapping in real data requires only changing the function bodies.
 // ---------------------------------------------------------------------------
 
-function getMonthLabel(): string {
-  return "September";
+// Replace with: GET /api/analytics/budget — user's monthly budget + current spend
+function getBudgetStats(): { totalSpent: number; budgetAmount: number } {
+  return { totalSpent: 12450, budgetAmount: 17292 };
 }
 
+// Replace with: currentMonth from GET /api/analytics/overview
 function getOverviewStats(): OverviewStats["currentMonth"] {
   return {
-    totalSpent: 212.8,
-    totalDrinks: 42,
-    averagePerDrink: 1300.5,
-    topChoices: ["Ceremonial Matcha", "Hojicha Latte", "Ethiopian Pour Over"],
+    totalSpent: 12450,
+    totalDrinks: 37,
+    averagePerDrink: 336,
+    topChoices: ["Spanish Latte", "Iced Matcha Latte", "Pour Over"],
     categoryBreakdown: [
-      { category: "Coffee", count: 27, total: 138.32, percentage: 65 },
-      { category: "Matcha", count: 9, total: 48.6, percentage: 21 },
-      { category: "Tea", count: 6, total: 25.88, percentage: 14 },
+      { category: "Coffee", count: 20, total: 7200, percentage: 65 },
+      { category: "Matcha", count: 5, total: 2100, percentage: 21 },
+      { category: "Espresso & Milk", count: 12, total: 3150, percentage: 14 },
     ],
   };
 }
 
 // Swap for a real aggregation query (e.g. top cafe by visit count this month)
 function getTopCafe(): { name: string; visits: number; photoUrl: string | null } {
-  return { name: "Onyx Coffee Lab", visits: 8, photoUrl: null };
+  return { name: "Yardstick", visits: 8, photoUrl: null };
+}
+
+// Replace with: top cafe by visit count from GET /api/analytics/overview
+function getMostVisited(): {
+  name: string;
+  neighborhood: string;
+  visits: number;
+  mapPhotoUrl: string | null;
+} {
+  return { name: "Yardstick", neighborhood: "Makati City", visits: 8, mapPhotoUrl: null };
+}
+
+// Replace with: totalSpent / weeks_elapsed from GET /api/analytics/overview
+// trend: 5 weekly values normalized 0–1, oldest → newest
+function getWeeklyAverageStats(): {
+  average: number;
+  trend: [number, number, number, number, number];
+} {
+  return { average: 3115, trend: [0.5, 0.75, 1.0, 0.67, 0.5] };
 }
 
 function getRecentEntries(): (IEntry & { displayDate: string })[] {
@@ -100,51 +121,13 @@ function getRecentEntries(): (IEntry & { displayDate: string })[] {
 }
 
 // ---------------------------------------------------------------------------
-// New widget data — replace bodies with real API/DB calls when backend is ready.
-// Return types match src/types/index.ts so swapping in live data is a one-liner.
-// ---------------------------------------------------------------------------
-
-// Replace with: GET /api/analytics/budget — user's monthly budget + current spend
-function getBudgetStats(): { totalSpent: number; budgetAmount: number } {
-  return { totalSpent: 12450, budgetAmount: 17292 };
-}
-
-// Replace with: currentMonth.categoryBreakdown from GET /api/analytics/overview
-function getConsumptionBreakdown(): Pick<CategoryBreakdown, "category" | "count">[] {
-  return [
-    { category: "Coffee", count: 20 },
-    { category: "Matcha", count: 5 },
-    { category: "Espresso & Milk", count: 12 },
-  ];
-}
-
-// Replace with: top cafe by visit count from GET /api/analytics/overview
-function getMostVisited(): {
-  name: string;
-  neighborhood: string;
-  visits: number;
-  mapPhotoUrl: string | null;
-} {
-  return { name: "Yardstick", neighborhood: "Makati City", visits: 8, mapPhotoUrl: null };
-}
-
-// Replace with: totalSpent / active days from GET /api/analytics/overview
-// weeklyTrend: 5 values normalized 0–1, oldest → newest
-function getDailyAverageStats(): {
-  average: number;
-  weeklyTrend: [number, number, number, number, number];
-} {
-  return { average: 415, weeklyTrend: [0.5, 0.75, 1.0, 0.67, 0.5] };
-}
-
-// ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
 
 function formatPrice(amount: number): string {
   return amount.toLocaleString("en-PH", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
   });
 }
 
@@ -184,40 +167,26 @@ function Stars({ rating }: { rating: number }) {
 // ---------------------------------------------------------------------------
 
 export default function HomePage() {
-  const month = getMonthLabel();
+  const budget = getBudgetStats();
   const stats = getOverviewStats();
   const topCafe = getTopCafe();
+  const mostVisited = getMostVisited();
+  const weeklyAvg = getWeeklyAverageStats();
   const entries = getRecentEntries();
 
-  // New widget data
-  const budget = getBudgetStats();
-  const consumption = getConsumptionBreakdown();
-  const mostVisited = getMostVisited();
-  const dailyAvg = getDailyAverageStats();
   const budgetPercent = Math.min(100, Math.round((budget.totalSpent / budget.budgetAmount) * 100));
-
-  const categoryText = stats.categoryBreakdown
-    .map((c) => `${c.percentage}% ${c.category}`)
-    .join(", ");
 
   return (
     <>
       {/* ── Top App Bar ── */}
       <header className="fixed top-0 left-0 w-full z-50 bg-surface flex justify-between items-center px-4 py-3">
         <div className="flex items-center gap-2">
-          <span className="material-symbols-outlined text-primary text-xl">
-            local_cafe
-          </span>
-          <h1 className="text-base font-bold tracking-[-0.02em] text-primary">
-            Brew Memoir
-          </h1>
+          <span className="material-symbols-outlined text-primary text-xl">local_cafe</span>
+          <h1 className="text-base font-bold tracking-[-0.02em] text-primary">Brew Memoir</h1>
         </div>
 
         <nav className="hidden md:flex gap-6 items-center">
-          <Link
-            href="/"
-            className="text-primary font-bold text-[10px] uppercase tracking-widest"
-          >
+          <Link href="/" className="text-primary font-bold text-[10px] uppercase tracking-widest">
             Journal
           </Link>
           <Link
@@ -252,20 +221,21 @@ export default function HomePage() {
       </header>
 
       {/* ── Main content ── */}
-      <main className="pt-16 pb-24 px-4 max-w-5xl mx-auto">
+      <main className="pt-16 pb-24 px-4 max-w-5xl mx-auto space-y-8">
+
         {/* Monthly Spend Budget */}
-        <section className="space-y-4 mb-6 pt-4">
+        <section className="space-y-4 pt-4">
           <div className="flex justify-between items-end">
             <div>
-              <span className="text-[10px] font-medium tracking-widest uppercase text-on-surface-variant">
+              <span className="text-[10px] font-medium uppercase tracking-widest text-on-surface-variant">
                 Monthly Spend
               </span>
               <h2 className="text-4xl font-extrabold tracking-tight text-on-background">
-                ₱{budget.totalSpent.toLocaleString("en-PH")}
+                ₱{formatPrice(budget.totalSpent)}
               </h2>
             </div>
             <div className="text-right">
-              <span className="text-[10px] font-medium tracking-widest uppercase text-primary">
+              <span className="text-[10px] font-medium uppercase tracking-widest text-primary">
                 Budget Status
               </span>
               <p className="text-sm font-semibold text-on-surface-variant">
@@ -282,166 +252,160 @@ export default function HomePage() {
         </section>
 
         {/* Bento Grid */}
-          <div className="grid grid-cols-2 gap-4">
-            {/* Sensory Palate Overview card — col-span-2 */}
-            <div className="col-span-2 bg-surface-container-low p-6 rounded-xl space-y-4">
-              <h3 className="font-bold text-sm tracking-tight text-on-surface">
-                Sensory Palate Overview
-              </h3>
+        <div className="grid grid-cols-2 gap-4">
 
-              {/* Category bars */}
-              <div className="space-y-3">
-                {stats.categoryBreakdown.map((item) => (
-                  <div key={item.category}>
-                    <div className="flex justify-between items-baseline mb-1.5">
-                      <span className="text-[0.625rem] font-bold uppercase tracking-widest text-on-surface-variant">
-                        {item.category}
-                      </span>
-                      <span className="text-[0.625rem] text-on-surface-variant">
-                        {item.percentage}%
-                      </span>
-                    </div>
-                    <div className="h-px bg-surface-container-high relative">
-                      <div
-                        className="absolute inset-y-0 left-0 bg-primary"
-                        style={{ width: `${item.percentage}%` }}
-                      />
-                    </div>
+          {/* Sensory Palate Overview */}
+          <div className="col-span-2 bg-surface-container-low p-5 rounded-xl space-y-4">
+            <h3 className="font-bold text-sm tracking-tight text-on-surface">
+              Sensory Palate Overview
+            </h3>
+
+            {/* Category bars */}
+            <div className="space-y-3">
+              {stats.categoryBreakdown.map((item) => (
+                <div key={item.category}>
+                  <div className="flex justify-between items-baseline mb-1.5">
+                    <span className="text-[0.625rem] font-bold uppercase tracking-widest text-on-surface-variant">
+                      {item.category}
+                    </span>
+                    <span className="text-[0.625rem] text-on-surface-variant">
+                      {item.percentage}%
+                    </span>
                   </div>
-                ))}
-              </div>
-
-              <div className="pt-1 flex items-center gap-3">
-                {/* Cafe photo — swap src for topCafe.photoUrl when backend is ready */}
-                <div className="w-12 h-12 rounded-lg bg-black shrink-0 overflow-hidden">
-                  {topCafe.photoUrl && (
-                    <img
-                      src={topCafe.photoUrl}
-                      alt={topCafe.name}
-                      className="w-full h-full object-cover"
+                  <div className="h-px bg-surface-container-high relative">
+                    <div
+                      className="absolute inset-y-0 left-0 bg-primary"
+                      style={{ width: `${item.percentage}%` }}
                     />
-                  )}
+                  </div>
                 </div>
-                <div className="flex-1 min-w-0">
-                  <span className="text-[0.625rem] font-bold uppercase tracking-widest text-primary block">
-                    Top Roastery
-                  </span>
-                  <span className="font-bold text-sm text-on-surface truncate block">
-                    {topCafe.name}
-                  </span>
-                </div>
-                <span className="px-3 py-1 bg-primary-container text-on-primary-container text-[10px] font-bold rounded-full shrink-0">
-                  {topCafe.visits} visits
+              ))}
+            </div>
+
+            <div className="flex items-center gap-3">
+              {/* Cafe photo — swap src for topCafe.photoUrl when backend is ready */}
+              <div className="w-12 h-12 rounded-lg bg-black shrink-0 overflow-hidden">
+                {topCafe.photoUrl && (
+                  <img
+                    src={topCafe.photoUrl}
+                    alt={topCafe.name}
+                    className="w-full h-full object-cover"
+                  />
+                )}
+              </div>
+              <div className="flex-1 min-w-0">
+                <span className="text-[0.625rem] font-bold uppercase tracking-widest text-primary block">
+                  Top Roastery
+                </span>
+                <span className="font-bold text-sm text-on-surface truncate block">
+                  {topCafe.name}
+                </span>
+              </div>
+              <span className="px-3 py-1 bg-primary-container text-on-primary-container text-[10px] font-bold rounded-full shrink-0">
+                {topCafe.visits} visits
+              </span>
+            </div>
+          </div>
+
+          {/* Most Visited */}
+          <div className="bg-surface-container-low rounded-xl p-5 flex flex-col justify-between aspect-square relative overflow-hidden">
+            <div className="relative z-10">
+              <h3 className="text-xs font-bold uppercase tracking-widest text-on-surface-variant mb-2">
+                Most Visited
+              </h3>
+              <div className="inline-flex items-center gap-1.5 bg-secondary-container px-3 py-1 rounded-full">
+                <span className="material-symbols-outlined text-xs text-on-secondary-container">
+                  location_on
+                </span>
+                <span className="text-[10px] font-bold uppercase tracking-widest text-on-secondary-container">
+                  {mostVisited.name}
                 </span>
               </div>
             </div>
-
-            {/* Most Visited */}
-            <div className="bg-surface-container-low rounded-xl p-5 flex flex-col justify-between aspect-square relative overflow-hidden">
-              <div className="relative z-10">
-                <h3 className="text-xs font-bold tracking-widest uppercase text-on-surface-variant mb-2">
-                  Most Visited
-                </h3>
-                <div className="inline-flex items-center gap-1.5 bg-secondary-container px-3 py-1 rounded-full">
-                  <span className="material-symbols-outlined text-xs text-on-secondary-container">
-                    location_on
-                  </span>
-                  <span className="text-[10px] font-bold text-on-secondary-container uppercase tracking-wider">
-                    {mostVisited.name}
-                  </span>
-                </div>
+            {/* Swap src for mostVisited.mapPhotoUrl when backend provides it */}
+            {mostVisited.mapPhotoUrl && (
+              <div className="absolute inset-0 opacity-10">
+                <img
+                  src={mostVisited.mapPhotoUrl}
+                  alt="Location map"
+                  className="w-full h-full object-cover"
+                />
               </div>
-              {/* Swap src for mostVisited.mapPhotoUrl when backend provides it */}
-              {mostVisited.mapPhotoUrl && (
-                <div className="absolute inset-0 opacity-10">
-                  <img
-                    src={mostVisited.mapPhotoUrl}
-                    alt="Location map"
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-              )}
-              <p className="relative z-10 text-xs text-on-surface-variant leading-relaxed">
-                {mostVisited.visits} visits this month in {mostVisited.neighborhood}.
-              </p>
-            </div>
-
-            {/* Daily Average */}
-            <div className="bg-surface-container-low rounded-xl p-5 flex flex-col justify-between aspect-square">
-              <div>
-                <h3 className="text-xs font-bold tracking-widest uppercase text-on-surface-variant mb-2">
-                  Daily Average
-                </h3>
-                <div className="text-2xl font-extrabold tracking-tight text-primary">
-                  ₱{dailyAvg.average.toLocaleString("en-PH")}
-                </div>
-              </div>
-              {/* weeklyTrend: 5 values normalized 0–1, oldest → newest */}
-              <div className="flex items-end gap-1 h-8">
-                {dailyAvg.weeklyTrend.map((v, i) => (
-                  <div
-                    key={i}
-                    className={`w-full rounded-sm ${i === 2 ? "bg-primary" : "bg-primary/20"}`}
-                    style={{ height: `${v * 100}%` }}
-                  />
-                ))}
-              </div>
-            </div>
+            )}
+            <p className="relative z-10 text-xs text-on-surface-variant leading-relaxed">
+              {mostVisited.visits} visits this month in {mostVisited.neighborhood}.
+            </p>
           </div>
 
-        {/* Bento grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          {/* Right: recent logs */}
-          <div className="lg:col-span-8">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-bold tracking-tight">Recent Logs</h3>
-              <Link
-                href="/profile/history"
-                className="text-primary text-[10px] font-bold uppercase tracking-widest hover:opacity-80 transition-opacity"
-              >
-                View History
-              </Link>
+          {/* Weekly Average */}
+          <div className="bg-surface-container-low rounded-xl p-5 flex flex-col justify-between aspect-square">
+            <div>
+              <h3 className="text-xs font-bold uppercase tracking-widest text-on-surface-variant mb-2">
+                Weekly Average
+              </h3>
+              <div className="text-2xl font-extrabold tracking-tight text-primary">
+                ₱{formatPrice(weeklyAvg.average)}
+              </div>
             </div>
-
-            <div className="bg-surface-container-low rounded-xl overflow-hidden">
-              {entries.map((entry, idx) => (
-                <Link
-                  key={entry._id}
-                  href={`/entry/${entry._id}`}
-                  className={`flex flex-col p-5 hover:bg-surface-container-high transition-colors group${idx < entries.length - 1 ? " border-b border-surface-variant/50" : ""}`}
-                >
-                  <div className="flex items-start justify-between mb-3">
-                    <div className="flex items-center gap-4">
-                      <div className="w-10 h-10 flex items-center justify-center rounded-lg bg-surface-container-lowest text-primary group-hover:scale-95 transition-transform">
-                        <span className="material-symbols-outlined text-xl">
-                          {CATEGORY_ICON[entry.category]}
-                        </span>
-                      </div>
-                      <div className="space-y-0.5">
-                        <div className="font-bold text-sm text-on-surface">
-                          {entry.cafeName}
-                        </div>
-                        <div className="text-xs text-on-surface-variant">
-                          {entry.beverageName}
-                        </div>
-                      </div>
-                    </div>
-                    <div className="font-bold text-sm text-on-surface">
-                      ₱{formatPrice(entry.totalPrice)}
-                    </div>
-                  </div>
-
-                  <div className="flex items-center justify-between pl-14">
-                    <Stars rating={entry.rating} />
-                    <div className="text-[10px] font-medium uppercase tracking-widest text-on-surface-variant opacity-70">
-                      {entry.displayDate}
-                    </div>
-                  </div>
-                </Link>
+            {/* trend: 5 weekly values normalized 0–1, oldest → newest */}
+            <div className="flex items-end gap-1 h-8">
+              {weeklyAvg.trend.map((v, i) => (
+                <div
+                  key={i}
+                  className={`w-full rounded-sm ${i === 2 ? "bg-primary" : "bg-primary/20"}`}
+                  style={{ height: `${v * 100}%` }}
+                />
               ))}
             </div>
           </div>
+
         </div>
+
+        {/* Recent Logs */}
+        <section className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h3 className="text-lg font-bold tracking-tight">Recent Logs</h3>
+            <Link
+              href="/profile/history"
+              className="text-primary text-[10px] font-bold uppercase tracking-widest hover:opacity-80 transition-opacity"
+            >
+              View History
+            </Link>
+          </div>
+          <div className="bg-surface-container-low rounded-xl overflow-hidden">
+            {entries.map((entry, idx) => (
+              <Link
+                key={entry._id}
+                href={`/entry/${entry._id}`}
+                className={`flex flex-col p-5 hover:bg-surface-container-high transition-colors group${idx < entries.length - 1 ? " border-b border-surface-variant/50" : ""}`}
+              >
+                <div className="flex items-start justify-between mb-3">
+                  <div className="flex items-center gap-4">
+                    <div className="w-10 h-10 flex items-center justify-center rounded-lg bg-surface-container-lowest text-primary group-hover:scale-95 transition-transform">
+                      <span className="material-symbols-outlined text-xl">
+                        {CATEGORY_ICON[entry.category]}
+                      </span>
+                    </div>
+                    <div className="space-y-0.5">
+                      <div className="font-bold text-sm text-on-surface">{entry.cafeName}</div>
+                      <div className="text-xs text-on-surface-variant">{entry.beverageName}</div>
+                    </div>
+                  </div>
+                  <div className="font-bold text-sm text-on-surface">
+                    ₱{formatPrice(entry.totalPrice)}
+                  </div>
+                </div>
+                <div className="flex items-center justify-between pl-14">
+                  <Stars rating={entry.rating} />
+                  <div className="text-[10px] font-medium uppercase tracking-widest text-on-surface-variant opacity-70">
+                    {entry.displayDate}
+                  </div>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </section>
+
       </main>
 
       {/* ── FAB ── */}
@@ -463,27 +427,21 @@ export default function HomePage() {
           className="flex flex-col items-center justify-center bg-secondary-container text-on-secondary-container rounded-lg px-3 py-1 transition-all"
         >
           <span className="material-symbols-outlined text-xl">menu_book</span>
-          <span className="text-[9px] uppercase tracking-widest font-bold mt-0.5">
-            Journal
-          </span>
+          <span className="text-[9px] uppercase tracking-widest font-bold mt-0.5">Journal</span>
         </Link>
         <Link
           href="/cafes"
           className="flex flex-col items-center justify-center text-on-surface-variant px-3 py-1 hover:text-primary transition-all"
         >
           <span className="material-symbols-outlined text-xl">store</span>
-          <span className="text-[9px] uppercase tracking-widest font-medium mt-0.5">
-            Cafes
-          </span>
+          <span className="text-[9px] uppercase tracking-widest font-medium mt-0.5">Cafes</span>
         </Link>
         <Link
           href="/profile"
           className="flex flex-col items-center justify-center text-on-surface-variant px-3 py-1 hover:text-primary transition-all"
         >
           <span className="material-symbols-outlined text-xl">person</span>
-          <span className="text-[9px] uppercase tracking-widest font-medium mt-0.5">
-            Profile
-          </span>
+          <span className="text-[9px] uppercase tracking-widest font-medium mt-0.5">Profile</span>
         </Link>
       </nav>
     </>
