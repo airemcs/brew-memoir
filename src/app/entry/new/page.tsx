@@ -101,30 +101,31 @@ function StarRating({
 }
 
 // ---------------------------------------------------------------------------
-// CityInput — autocomplete that seeds from common PH neighborhoods and
-// persists any new city the user enters to localStorage.
+// AutocompleteInput — generic autocomplete that seeds from a provided list
+// and persists new entries to a given localStorage key.
 // ---------------------------------------------------------------------------
 
-const SEED_CITIES = [
-  "BGC, Taguig", "Poblacion, Makati", "Salcedo Village, Makati",
-  "Legazpi Village, Makati", "Greenbelt, Makati", "Rockwell, Makati",
-  "San Juan, Metro Manila", "Kapitolyo, Pasig", "Ortigas, Pasig",
-  "Eastwood, Quezon City", "Katipunan, Quezon City", "Maginhawa, Quezon City",
-  "Timog, Quezon City", "Cubao, Quezon City", "Alabang, Muntinlupa",
-  "Intramuros, Manila", "Ermita, Manila", "Malate, Manila",
-];
-const LS_KEY = "brew-memoir:cities";
-
-function CityInput({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+function AutocompleteInput({
+  value,
+  onChange,
+  seeds,
+  lsKey,
+  placeholder,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  seeds: string[];
+  lsKey: string;
+  placeholder: string;
+}) {
   const [open, setOpen] = useState(false);
-  const [allCities, setAllCities] = useState<string[]>(SEED_CITIES);
+  const [all, setAll] = useState<string[]>(seeds);
   const wrapperRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     try {
-      const stored = JSON.parse(localStorage.getItem(LS_KEY) ?? "[]") as string[];
-      const merged = Array.from(new Set([...stored, ...SEED_CITIES]));
-      setAllCities(merged);
+      const stored = JSON.parse(localStorage.getItem(lsKey) ?? "[]") as string[];
+      setAll(Array.from(new Set([...stored, ...seeds])));
     } catch { /* ignore */ }
   }, []);
 
@@ -138,8 +139,8 @@ function CityInput({ value, onChange }: { value: string; onChange: (v: string) =
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  function handleSelect(city: string) {
-    onChange(city);
+  function handleSelect(item: string) {
+    onChange(item);
     setOpen(false);
   }
 
@@ -147,17 +148,15 @@ function CityInput({ value, onChange }: { value: string; onChange: (v: string) =
     const trimmed = value.trim();
     if (!trimmed) return;
     try {
-      const stored = JSON.parse(localStorage.getItem(LS_KEY) ?? "[]") as string[];
+      const stored = JSON.parse(localStorage.getItem(lsKey) ?? "[]") as string[];
       if (!stored.includes(trimmed)) {
-        localStorage.setItem(LS_KEY, JSON.stringify([trimmed, ...stored]));
-        setAllCities((prev) => Array.from(new Set([trimmed, ...prev])));
+        localStorage.setItem(lsKey, JSON.stringify([trimmed, ...stored]));
+        setAll((prev) => Array.from(new Set([trimmed, ...prev])));
       }
     } catch { /* ignore */ }
   }
 
-  const filtered = allCities.filter((c) =>
-    c.toLowerCase().includes(value.toLowerCase())
-  );
+  const filtered = all.filter((c) => c.toLowerCase().includes(value.toLowerCase()));
 
   return (
     <div ref={wrapperRef} className="relative">
@@ -167,21 +166,21 @@ function CityInput({ value, onChange }: { value: string; onChange: (v: string) =
         onChange={(e) => onChange(e.target.value)}
         onFocus={() => setOpen(true)}
         onBlur={handleBlurSave}
-        placeholder="Makati, Metro Manila"
+        placeholder={placeholder}
         className="w-full bg-transparent border-0 border-b border-outline-variant/30 focus:border-primary focus:ring-0 focus:outline-none py-3 px-0 text-xl font-medium placeholder:text-outline-variant/50 transition-colors duration-300"
       />
       {open && filtered.length > 0 && (
         <ul className="absolute z-20 top-full left-0 w-full bg-surface-container-lowest rounded-xl shadow-lg border border-outline-variant/10 mt-1 max-h-52 overflow-y-auto">
-          {filtered.map((city) => (
-            <li key={city}>
+          {filtered.map((item) => (
+            <li key={item}>
               <button
                 type="button"
-                onMouseDown={() => handleSelect(city)}
+                onMouseDown={() => handleSelect(item)}
                 className={`w-full text-left px-4 py-3 text-sm font-medium transition-colors hover:bg-surface-container-low ${
-                  city === value ? "text-primary font-bold" : "text-on-surface"
+                  item === value ? "text-primary font-bold" : "text-on-surface"
                 }`}
               >
-                {city}
+                {item}
               </button>
             </li>
           ))}
@@ -190,6 +189,20 @@ function CityInput({ value, onChange }: { value: string; onChange: (v: string) =
     </div>
   );
 }
+
+const SEED_CAFES = [
+  "Yardstick Coffee", "Kurasu", "Sightglass", "Kalye Brew", "The Curator",
+  "Commune", "Habitual Coffee", "Early Bird Breakfast Club", "Brewed Awakening",
+  "Cartimar Coffee", "Kalsada Coffee", "Toby's Estate", "Tim Hortons",
+];
+const SEED_CITIES = [
+  "BGC, Taguig", "Poblacion, Makati", "Salcedo Village, Makati",
+  "Legazpi Village, Makati", "Greenbelt, Makati", "Rockwell, Makati",
+  "San Juan, Metro Manila", "Kapitolyo, Pasig", "Ortigas, Pasig",
+  "Eastwood, Quezon City", "Katipunan, Quezon City", "Maginhawa, Quezon City",
+  "Timog, Quezon City", "Cubao, Quezon City", "Alabang, Muntinlupa",
+  "Intramuros, Manila", "Ermita, Manila", "Malate, Manila",
+];
 
 // ---------------------------------------------------------------------------
 // Page
@@ -491,12 +504,12 @@ export default function NewEntryPage() {
               <label className="text-[0.75rem] uppercase tracking-widest font-bold text-on-surface-variant block mb-1">
                 Cafe Name
               </label>
-              <input
-                type="text"
+              <AutocompleteInput
                 value={cafeName}
-                onChange={(e) => setCafeName(e.target.value)}
+                onChange={setCafeName}
+                seeds={SEED_CAFES}
+                lsKey="brew-memoir:cafes"
                 placeholder="Yardstick Coffee"
-                className="w-full bg-transparent border-0 border-b border-outline-variant/30 focus:border-primary focus:ring-0 focus:outline-none py-3 px-0 text-xl font-medium placeholder:text-outline-variant/50 transition-colors duration-300"
               />
             </div>
 
@@ -504,7 +517,13 @@ export default function NewEntryPage() {
               <label className="text-[0.75rem] uppercase tracking-widest font-bold text-on-surface-variant block mb-1">
                 City
               </label>
-              <CityInput value={cafeCity} onChange={setCafeCity} />
+              <AutocompleteInput
+                value={cafeCity}
+                onChange={setCafeCity}
+                seeds={SEED_CITIES}
+                lsKey="brew-memoir:cities"
+                placeholder="Makati, Metro Manila"
+              />
             </div>
 
             <div className="grid grid-cols-2 gap-8">
