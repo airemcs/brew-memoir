@@ -39,7 +39,12 @@ function getMostVisited(): {
   visits: number;
   mapPhotoUrl: string | null;
 } {
-  return { name: "Yardstick", neighborhood: "Makati City", visits: 8, mapPhotoUrl: null };
+  return {
+    name: "Yardstick",
+    neighborhood: "Makati City",
+    visits: 8,
+    mapPhotoUrl: "https://lh3.googleusercontent.com/aida-public/AB6AXuCDaO9DEjvQ9XZvAsT42ZUKuZ8cqyFBoOblLVt2lsVCvw5b-1T0IJKePJkD0Il9zITvC24Mu6rkg4kixItqEH5CXK5KGGxA5zNfup_Unqz0bY5owjIWEcEVMq5M5IyC29435rQp1xEzhh-8z5tZtWcnTE4_iveQkp2ZsFGv96pPblYW3_eWdPrbYuWIkGtaqoVZ_HXdsGOJHTdoZ6W4EwLSHXiafwydwehEvO_eliBPoCiY1lFA8D7uCsnejJUoAKAevmZtft6vwik",
+  };
 }
 
 // Replace with: totalSpent / weeks_elapsed from GET /api/analytics/overview
@@ -272,7 +277,7 @@ export default function HomePage() {
                       {item.percentage}%
                     </span>
                   </div>
-                  <div className="h-px bg-surface-container-high relative">
+                  <div className="h-1 bg-surface-container-high relative">
                     <div
                       className="absolute inset-y-0 left-0 bg-primary"
                       style={{ width: `${item.percentage}%` }}
@@ -280,30 +285,6 @@ export default function HomePage() {
                   </div>
                 </div>
               ))}
-            </div>
-
-            <div className="flex items-center gap-3">
-              {/* Cafe photo — swap src for topCafe.photoUrl when backend is ready */}
-              <div className="w-12 h-12 rounded-lg bg-black shrink-0 overflow-hidden">
-                {topCafe.photoUrl && (
-                  <img
-                    src={topCafe.photoUrl}
-                    alt={topCafe.name}
-                    className="w-full h-full object-cover"
-                  />
-                )}
-              </div>
-              <div className="flex-1 min-w-0">
-                <span className="text-[0.625rem] font-bold uppercase tracking-widest text-primary block">
-                  Top Roastery
-                </span>
-                <span className="font-bold text-sm text-on-surface truncate block">
-                  {topCafe.name}
-                </span>
-              </div>
-              <span className="px-3 py-1 bg-primary-container text-on-primary-container text-[10px] font-bold rounded-full shrink-0">
-                {topCafe.visits} visits
-              </span>
             </div>
           </div>
 
