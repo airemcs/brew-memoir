@@ -325,9 +325,14 @@ export default function HistoryPage() {
           <div className="space-y-8">
             {Object.entries(grouped).map(([month, entries]) => (
               <div key={month}>
-                <h2 className="text-[0.75rem] font-bold uppercase tracking-[0.2em] text-outline mb-3 border-b border-outline-variant/10 pb-2">
-                  {month}
-                </h2>
+                <div className="flex items-center justify-between mb-3 border-b border-outline-variant/10 pb-2">
+                  <h2 className="text-[0.75rem] font-bold uppercase tracking-[0.2em] text-outline">
+                    {month}
+                  </h2>
+                  <span className="text-[0.75rem] font-bold text-on-surface-variant">
+                    ₱{entries.reduce((sum, e) => sum + e.totalPrice, 0).toLocaleString("en-PH", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  </span>
+                </div>
                 <div className="bg-surface-container-low rounded-xl overflow-hidden">
                   {entries.map((entry, idx) => (
                     <Link
