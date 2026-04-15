@@ -1,28 +1,31 @@
 import Link from "next/link";
-import type { ICafeWithStats } from "@/types";
+import type { BeverageCategory, ICafeWithStats } from "@/types";
 
 // ---------------------------------------------------------------------------
 // Data layer — replace with: GET /api/cafes
 // ---------------------------------------------------------------------------
 
-function getCafes(): (ICafeWithStats & {
+type CafeEntry = ICafeWithStats & {
   lastDrink: string;
   lastDate: string;
-  tags: string[];
-})[] {
+  lastCategory: BeverageCategory;
+};
+
+function getCafes(): CafeEntry[] {
   return [
     {
       _id: "cafe-1",
       userId: "static",
-      name: "Calyx & Crema",
-      address: "24th Street, Design District",
-      neighborhood: "BGC, Taguig",
-      tags: ["Botanical", "Quiet"],
+      name: "Yardstick Coffee",
+      address: "Salcedo Village, Makati",
+      neighborhood: "Salcedo Village, Makati",
+      tags: [],
       isFavorite: true,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
-      lastDrink: "London Matcha",
+      lastDrink: "Single Origin Pourover",
       lastDate: "Oct 26",
+      lastCategory: "Coffee",
       stats: {
         totalVisits: 12,
         totalSpent: 5840,
@@ -33,15 +36,16 @@ function getCafes(): (ICafeWithStats & {
     {
       _id: "cafe-2",
       userId: "static",
-      name: "L'Artisan Roastery",
-      address: "Old Town Heritage Loop",
-      neighborhood: "Intramuros, Manila",
-      tags: ["Heritage", "Pour Over"],
+      name: "Kurasu",
+      address: "Poblacion, Makati",
+      neighborhood: "Poblacion, Makati",
+      tags: [],
       isFavorite: false,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
-      lastDrink: "Ethiopian Yirgacheffe",
+      lastDrink: "Toasted Hojicha Flat White",
       lastDate: "Oct 15",
+      lastCategory: "Hojicha",
       stats: {
         totalVisits: 6,
         totalSpent: 4250,
@@ -52,15 +56,16 @@ function getCafes(): (ICafeWithStats & {
     {
       _id: "cafe-3",
       userId: "static",
-      name: "The Brew Lab",
-      address: "Tech Quarter, Level 4",
-      neighborhood: "Eastwood, Quezon City",
-      tags: ["Specialty", "Cold Brew"],
+      name: "Sightglass",
+      address: "Legazpi Village, Makati",
+      neighborhood: "Legazpi Village, Makati",
+      tags: [],
       isFavorite: false,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
-      lastDrink: "Nitro Cold Brew",
+      lastDrink: "V60 Pour Over (Ethiopia)",
       lastDate: "Oct 08",
+      lastCategory: "Coffee",
       stats: {
         totalVisits: 8,
         totalSpent: 3960,
@@ -71,20 +76,61 @@ function getCafes(): (ICafeWithStats & {
     {
       _id: "cafe-4",
       userId: "static",
-      name: "Stonefruit Espresso",
-      address: "Harbor Front Promenade",
-      neighborhood: "Pasay City",
-      tags: ["Espresso", "Seasonal"],
+      name: "The Curator",
+      address: "Legazpi Village, Makati",
+      neighborhood: "Legazpi Village, Makati",
+      tags: [],
       isFavorite: true,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       lastDrink: "Peachy Flat White",
       lastDate: "Sept 30",
+      lastCategory: "Espresso & Milk",
       stats: {
         totalVisits: 5,
         totalSpent: 2450,
         averageRating: 4.8,
         lastVisited: "2024-09-30T09:45:00.000Z",
+      },
+    },
+    {
+      _id: "cafe-5",
+      userId: "static",
+      name: "Commune",
+      address: "Kapitolyo, Pasig",
+      neighborhood: "Kapitolyo, Pasig",
+      tags: [],
+      isFavorite: false,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      lastDrink: "Iced Matcha Latte",
+      lastDate: "Sept 22",
+      lastCategory: "Matcha",
+      stats: {
+        totalVisits: 4,
+        totalSpent: 1780,
+        averageRating: 4.0,
+        lastVisited: "2024-09-22T13:00:00.000Z",
+      },
+    },
+    {
+      _id: "cafe-6",
+      userId: "static",
+      name: "Kalsada Coffee",
+      address: "Katipunan, Quezon City",
+      neighborhood: "Katipunan, Quezon City",
+      tags: [],
+      isFavorite: false,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+      lastDrink: "Benguet Drip Coffee",
+      lastDate: "Sept 10",
+      lastCategory: "Coffee",
+      stats: {
+        totalVisits: 3,
+        totalSpent: 1260,
+        averageRating: 4.5,
+        lastVisited: "2024-09-10T09:00:00.000Z",
       },
     },
   ];
@@ -107,9 +153,7 @@ function formatPrice(amount: number): string {
 
 export default function CafesPage() {
   const cafes = getCafes();
-
-  const [featured, ...rest] = cafes;
-  const [second, third] = rest;
+  const featured = cafes[0];
   const spotlight = cafes[3];
 
   // Replace with: GET /api/analytics/cafes — portfolio total
@@ -175,7 +219,7 @@ export default function CafesPage() {
         {/* Tab filter */}
         <div className="mb-10 flex items-center justify-between border-b border-outline-variant/20 pb-0">
           <div className="flex gap-6 items-center">
-            {["All Visited", "Favorites", "Nearby"].map((tab, i) => (
+            {["All Visited"].map((tab, i) => (
               <button
                 key={tab}
                 className={`text-[0.6875rem] uppercase tracking-[0.15em] font-bold pb-3 border-b-2 transition-colors ${
@@ -193,12 +237,11 @@ export default function CafesPage() {
           </button>
         </div>
 
-        {/* Directory Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-y-8 md:gap-x-10">
+        <div className="flex flex-col gap-8">
 
-          {/* Feature Card */}
-          <Link href={`/cafes/${featured._id}`} className="md:col-span-8 group">
-            <div className="bg-surface-container-low p-7 rounded-2xl hover:bg-surface-container transition-colors duration-300 h-full flex flex-col justify-between">
+          {/* ── Row 1: Feature Card (full width) ── */}
+          <Link href={`/cafes/${featured._id}`} className="group block">
+            <div className="bg-surface-container-low p-7 rounded-2xl hover:bg-surface-container transition-colors duration-300">
               <div className="flex justify-between items-start mb-10">
                 <div>
                   <h3 className="text-2xl font-bold text-on-surface mb-1">{featured.name}</h3>
@@ -212,93 +255,22 @@ export default function CafesPage() {
                   <p className="text-[0.625rem] uppercase tracking-widest text-on-surface-variant">Visits</p>
                 </div>
               </div>
-              <div className="flex justify-between items-end border-t border-outline-variant/10 pt-5">
-                <div>
-                  <p className="text-[0.625rem] uppercase tracking-widest text-on-surface-variant mb-1">Last Ritual</p>
-                  <p className="text-sm font-medium text-on-surface">
-                    {featured.lastDrink}
-                    <span className="text-on-surface-variant mx-2">·</span>
-                    {featured.lastDate}
-                  </p>
-                </div>
-                <div className="flex flex-wrap gap-2 justify-end">
-                  {featured.tags.map((tag) => (
-                    <span
-                      key={tag}
-                      className="px-3 py-1 bg-secondary-container text-on-secondary-container rounded-full text-[0.625rem] font-bold uppercase tracking-wider"
-                    >
-                      {tag}
-                    </span>
-                  ))}
-                </div>
+              <div className="border-t border-outline-variant/10 pt-5 flex flex-col gap-1">
+                <p className="text-[0.625rem] uppercase tracking-widest text-on-surface-variant">Last Ritual</p>
+                <p className="text-base font-semibold text-on-surface">
+                  {featured.lastDrink}
+                </p>
+                <p className="text-sm text-on-surface-variant">
+                  {featured.lastCategory}
+                  <span className="mx-2">·</span>
+                  {featured.lastDate}
+                </p>
               </div>
             </div>
           </Link>
 
-          {/* Portfolio Metric Panel — visible on all screen sizes */}
-          <div className="md:col-span-4 bg-surface-container-low rounded-2xl p-7 flex flex-col justify-center gap-6 md:bg-transparent md:rounded-none md:p-0 md:border-l md:border-outline-variant/10 md:pl-8">
-            <div>
-              <h4 className="text-[0.625rem] uppercase tracking-[0.2em] text-on-surface-variant mb-2">
-                Portfolio Value
-              </h4>
-              <p className="text-2xl font-semibold text-on-surface">₱{formatPrice(portfolioTotal)}</p>
-              <p className="text-xs text-on-surface-variant mt-1">
-                Total spend across {cafes.length} locations
-              </p>
-            </div>
-            <div className="w-full h-px bg-outline-variant/15" />
-            <div>
-              <h4 className="text-[0.625rem] uppercase tracking-[0.2em] text-on-surface-variant mb-3">
-                Roaster Diversity
-              </h4>
-              <div className="flex gap-2 mb-2">
-                <div className="h-1 flex-1 bg-primary rounded-full" />
-                <div className="h-1 flex-1 bg-secondary rounded-full" />
-                <div className="h-1 w-8 bg-tertiary rounded-full" />
-              </div>
-              <p className="text-xs text-on-surface-variant">72% Dark Roast profile preference</p>
-            </div>
-          </div>
-
-          {/* Minimal List Cards */}
-          <Link href={`/cafes/${second._id}`} className="md:col-span-6 group block">
-            <div className="bg-surface-container-lowest p-6 rounded-2xl border border-outline-variant/10 hover:bg-surface-container-low transition-all duration-300 h-full">
-              <div className="flex justify-between items-start mb-5">
-                <div>
-                  <h3 className="text-xl font-bold text-on-surface">{second.name}</h3>
-                  <p className="text-xs text-on-surface-variant mt-1">{second.address}</p>
-                </div>
-                <div className="text-right">
-                  <p className="text-sm font-medium text-on-surface">₱{formatPrice(second.stats.totalSpent)}</p>
-                  <p className="text-[0.5625rem] uppercase tracking-widest text-on-surface-variant">Spent</p>
-                </div>
-              </div>
-              <p className="text-xs text-on-surface-variant italic">
-                Last: {second.lastDrink} · {second.lastDate}
-              </p>
-            </div>
-          </Link>
-
-          <Link href={`/cafes/${third._id}`} className="md:col-span-6 group block">
-            <div className="bg-surface-container-lowest p-6 rounded-2xl border border-outline-variant/10 hover:bg-surface-container-low transition-all duration-300 h-full">
-              <div className="flex justify-between items-start mb-5">
-                <div>
-                  <h3 className="text-xl font-bold text-on-surface">{third.name}</h3>
-                  <p className="text-xs text-on-surface-variant mt-1">{third.address}</p>
-                </div>
-                <div className="text-right">
-                  <span className="text-xl font-light text-primary">{third.stats.totalVisits}</span>
-                  <p className="text-[0.5625rem] uppercase tracking-widest text-on-surface-variant">Visits</p>
-                </div>
-              </div>
-              <p className="text-xs text-on-surface-variant italic">
-                Last: {third.lastDrink} · {third.lastDate}
-              </p>
-            </div>
-          </Link>
-
-          {/* Spotlight Full-Width Dark Card */}
-          <Link href={`/cafes/${spotlight._id}`} className="md:col-span-12 group block mt-2">
+          {/* ── Row 2: Spotlight (Highlight) ── */}
+          <Link href={`/cafes/${spotlight._id}`} className="group block">
             <div className="relative overflow-hidden bg-on-background p-10 rounded-2xl">
               <div className="relative z-10 flex flex-col md:flex-row justify-between items-center gap-8">
                 <div className="text-center md:text-left">
@@ -330,6 +302,68 @@ export default function CafesPage() {
               <div className="absolute inset-0 bg-linear-to-br from-on-background via-[#252826] to-on-background opacity-90" />
             </div>
           </Link>
+
+          {/* ── Row 3: Portfolio Value + Category Breakdown ── */}
+          <div className="bg-surface-container-low rounded-2xl p-7 flex flex-col md:flex-row gap-8 md:gap-16">
+            <div className="flex flex-col gap-1">
+              <h4 className="text-[0.625rem] uppercase tracking-[0.2em] text-on-surface-variant mb-1">
+                Portfolio Value
+              </h4>
+              <p className="text-2xl font-semibold text-on-surface">₱{formatPrice(portfolioTotal)}</p>
+              <p className="text-xs text-on-surface-variant">
+                Total spend across {cafes.length} locations
+              </p>
+            </div>
+            <div className="w-px bg-outline-variant/15 hidden md:block self-stretch" />
+            <div className="flex-1">
+              <h4 className="text-[0.625rem] uppercase tracking-[0.2em] text-on-surface-variant mb-3">
+                Roaster Diversity
+              </h4>
+              <div className="flex gap-2 mb-2">
+                <div className="h-1 flex-1 bg-primary rounded-full" />
+                <div className="h-1 flex-1 bg-secondary rounded-full" />
+                <div className="h-1 w-8 bg-tertiary rounded-full" />
+              </div>
+              <p className="text-xs text-on-surface-variant">72% Dark Roast profile preference</p>
+            </div>
+          </div>
+
+          {/* ── Row 4: Per-Cafe List ── */}
+          <section className="flex flex-col gap-3">
+            <div className="flex items-center justify-between mb-1">
+              <h3 className="text-sm font-bold uppercase tracking-widest text-on-surface-variant">
+                All Locations
+              </h3>
+              <span className="text-xs text-on-surface-variant">{cafes.length} cafes</span>
+            </div>
+            <div className="bg-surface-container-low rounded-2xl overflow-hidden">
+              {cafes.map((cafe, idx) => (
+                <Link
+                  key={cafe._id}
+                  href={`/cafes/${cafe._id}`}
+                  className={`flex items-center justify-between px-6 py-4 hover:bg-surface-container transition-colors group${
+                    idx < cafes.length - 1 ? " border-b border-outline-variant/10" : ""
+                  }`}
+                >
+                  <div className="flex flex-col gap-0.5 min-w-0 flex-1">
+                    <span className="text-sm font-bold text-on-surface group-hover:text-primary transition-colors">
+                      {cafe.name}
+                    </span>
+                    <span className="text-xs text-on-surface-variant">{cafe.address}</span>
+                    <span className="text-xs text-on-surface-variant italic mt-0.5 truncate">
+                      Last: {cafe.lastDrink} · {cafe.lastDate}
+                    </span>
+                  </div>
+                  <div className="text-right flex flex-col items-end gap-0.5 ml-6 shrink-0">
+                    <span className="text-sm font-semibold text-on-surface">
+                      ₱{formatPrice(cafe.stats.totalSpent)}
+                    </span>
+                    <span className="text-[0.5625rem] uppercase tracking-widest text-on-surface-variant">Spent</span>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </section>
 
         </div>
       </main>
