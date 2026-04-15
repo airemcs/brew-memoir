@@ -118,7 +118,7 @@ export default function ProfilePage() {
   return (
     <>
       {/* ── Top App Bar ── */}
-      <header className="fixed top-0 left-0 w-full z-50 bg-surface flex items-center gap-2 px-4 py-3">
+      <header className="fixed top-0 left-0 w-full z-50 bg-surface flex items-center gap-2 px-6 py-4">
         <Link
           href="/"
           className="flex items-center justify-center p-2 rounded-full hover:bg-surface-container transition-colors"

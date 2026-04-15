@@ -227,7 +227,7 @@ export default function HistoryPage() {
   return (
     <>
       {/* ── Top App Bar ── */}
-      <header className="fixed top-0 left-0 w-full z-50 bg-surface flex justify-between items-center px-4 py-3">
+      <header className="fixed top-0 left-0 w-full z-50 bg-surface flex justify-between items-center px-6 py-4">
         <div className="flex items-center gap-2">
           <span className="material-symbols-outlined text-primary text-xl">local_cafe</span>
           <h1 className="text-base font-bold tracking-[-0.02em] text-primary">Brew Memoir</h1>
