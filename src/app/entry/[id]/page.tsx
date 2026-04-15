@@ -166,6 +166,9 @@ export default async function EntryDetailPage({ params }: { params: Promise<{ id
           <Link href="/profile/history" className="text-on-surface-variant text-[10px] uppercase tracking-widest hover:text-primary transition-colors">
             History
           </Link>
+          <Link href="/profile" className="text-on-surface-variant text-[10px] uppercase tracking-widest hover:text-primary transition-colors">
+            Profile
+          </Link>
         </nav>
 
         <button
@@ -310,6 +313,13 @@ export default async function EntryDetailPage({ params }: { params: Promise<{ id
         >
           <span className="material-symbols-outlined text-xl">history</span>
           <span className="text-[9px] uppercase tracking-widest font-medium mt-0.5">History</span>
+        </Link>
+        <Link
+          href="/profile"
+          className="flex flex-col items-center justify-center text-on-surface-variant px-3 py-1 hover:text-primary transition-all"
+        >
+          <span className="material-symbols-outlined text-xl">person</span>
+          <span className="text-[9px] uppercase tracking-widest font-medium mt-0.5">Profile</span>
         </Link>
       </nav>
     </>

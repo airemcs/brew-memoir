@@ -197,7 +197,7 @@ export default function HomePage() {
         </div>
 
         <nav className="hidden md:flex gap-6 items-center">
-          <Link href="/" className="text-primary font-bold text-[10px] uppercase tracking-widest">
+          <Link href="/" className="text-primary text-[10px] uppercase tracking-widest">
             Journal
           </Link>
           <Link
@@ -211,6 +211,12 @@ export default function HomePage() {
             className="text-on-surface-variant text-[10px] uppercase tracking-widest hover:text-primary transition-colors"
           >
             History
+          </Link>
+          <Link
+            href="/profile"
+            className="text-on-surface-variant text-[10px] uppercase tracking-widest hover:text-primary transition-colors"
+          >
+            Profile
           </Link>
         </nav>
 
@@ -429,6 +435,13 @@ export default function HomePage() {
         >
           <span className="material-symbols-outlined text-xl">history</span>
           <span className="text-[9px] uppercase tracking-widest font-medium mt-0.5">History</span>
+        </Link>
+        <Link
+          href="/profile"
+          className="flex flex-col items-center justify-center text-on-surface-variant px-3 py-1 hover:text-primary transition-all"
+        >
+          <span className="material-symbols-outlined text-xl">person</span>
+          <span className="text-[9px] uppercase tracking-widest font-medium mt-0.5">Profile</span>
         </Link>
       </nav>
     </>
