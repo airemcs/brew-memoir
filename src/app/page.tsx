@@ -9,7 +9,7 @@ import type { BeverageCategory, IEntry, OverviewStats } from "@/types";
 
 // Replace with: GET /api/analytics/budget — user's monthly budget + current spend
 function getBudgetStats(): { totalSpent: number; budgetAmount: number } {
-  return { totalSpent: 12450, budgetAmount: 17292 };
+  return { totalSpent: 12450, budgetAmount: 10000 };
 }
 
 // Replace with: currentMonth from GET /api/analytics/overview
@@ -179,7 +179,9 @@ export default function HomePage() {
   const weeklyAvg = getWeeklyAverageStats();
   const entries = getRecentEntries();
 
-  const budgetPercent = Math.min(100, Math.round((budget.totalSpent / budget.budgetAmount) * 100));
+  const budgetExceeded = budget.totalSpent > budget.budgetAmount;
+  const budgetPercentRaw = Math.round((budget.totalSpent / budget.budgetAmount) * 100);
+  const budgetPercent = Math.min(100, budgetPercentRaw);
 
   return (
     <>
@@ -240,17 +242,17 @@ export default function HomePage() {
               </h2>
             </div>
             <div className="text-right">
-              <span className="text-[10px] font-medium uppercase tracking-widest text-primary">
+              <span className={`text-[10px] font-medium uppercase tracking-widest ${budgetExceeded ? "text-error" : "text-primary"}`}>
                 Budget Status
               </span>
-              <p className="text-sm font-semibold text-on-surface-variant">
-                {budgetPercent}% Consumed
+              <p className={`text-sm font-semibold ${budgetExceeded ? "text-error" : "text-on-surface-variant"}`}>
+                {budgetPercentRaw}% Consumed
               </p>
             </div>
           </div>
           <div className="h-1.5 w-full bg-surface-container rounded-full overflow-hidden">
             <div
-              className="h-full bg-linear-to-r from-primary to-primary-dim rounded-full"
+              className={`h-full rounded-full ${budgetExceeded ? "bg-error" : "bg-linear-to-r from-primary to-primary-dim"}`}
               style={{ width: `${budgetPercent}%` }}
             />
           </div>
