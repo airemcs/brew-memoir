@@ -1,5 +1,5 @@
 import Link from "next/link";
-import type { BeverageCategory, IEntry, OverviewStats } from "@/types";
+import type { BeverageCategory, CategoryBreakdown, IEntry, OverviewStats } from "@/types";
 
 // ---------------------------------------------------------------------------
 // Data layer — replace these with async DB / API calls when backend is ready.
@@ -100,6 +100,44 @@ function getRecentEntries(): (IEntry & { displayDate: string })[] {
 }
 
 // ---------------------------------------------------------------------------
+// New widget data — replace bodies with real API/DB calls when backend is ready.
+// Return types match src/types/index.ts so swapping in live data is a one-liner.
+// ---------------------------------------------------------------------------
+
+// Replace with: GET /api/analytics/budget — user's monthly budget + current spend
+function getBudgetStats(): { totalSpent: number; budgetAmount: number } {
+  return { totalSpent: 12450, budgetAmount: 17292 };
+}
+
+// Replace with: currentMonth.categoryBreakdown from GET /api/analytics/overview
+function getConsumptionBreakdown(): Pick<CategoryBreakdown, "category" | "count">[] {
+  return [
+    { category: "Coffee", count: 20 },
+    { category: "Matcha", count: 5 },
+    { category: "Espresso & Milk", count: 12 },
+  ];
+}
+
+// Replace with: top cafe by visit count from GET /api/analytics/overview
+function getMostVisited(): {
+  name: string;
+  neighborhood: string;
+  visits: number;
+  mapPhotoUrl: string | null;
+} {
+  return { name: "Yardstick", neighborhood: "Makati City", visits: 8, mapPhotoUrl: null };
+}
+
+// Replace with: totalSpent / active days from GET /api/analytics/overview
+// weeklyTrend: 5 values normalized 0–1, oldest → newest
+function getDailyAverageStats(): {
+  average: number;
+  weeklyTrend: [number, number, number, number, number];
+} {
+  return { average: 415, weeklyTrend: [0.5, 0.75, 1.0, 0.67, 0.5] };
+}
+
+// ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
 
@@ -150,6 +188,13 @@ export default function HomePage() {
   const stats = getOverviewStats();
   const topCafe = getTopCafe();
   const entries = getRecentEntries();
+
+  // New widget data
+  const budget = getBudgetStats();
+  const consumption = getConsumptionBreakdown();
+  const mostVisited = getMostVisited();
+  const dailyAvg = getDailyAverageStats();
+  const budgetPercent = Math.min(100, Math.round((budget.totalSpent / budget.budgetAmount) * 100));
 
   const categoryText = stats.categoryBreakdown
     .map((c) => `${c.percentage}% ${c.category}`)
@@ -365,6 +410,129 @@ export default function HomePage() {
                   </div>
                 </Link>
               ))}
+            </div>
+          </div>
+        </div>
+
+        {/* ── New Widget Concepts (comparison) ── */}
+        <div className="mt-12 space-y-8 max-w-sm">
+          <div className="flex items-center gap-3">
+            <div className="h-px flex-1 bg-surface-variant" />
+            <span className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">
+              New Widget Concepts
+            </span>
+            <div className="h-px flex-1 bg-surface-variant" />
+          </div>
+
+          {/* Monthly Spend Budget */}
+          <section className="space-y-4">
+            <div className="flex justify-between items-end">
+              <div>
+                <span className="text-[10px] font-medium tracking-widest uppercase text-on-surface-variant">
+                  Monthly Spend
+                </span>
+                <h2 className="text-4xl font-extrabold tracking-tight text-on-background">
+                  ₱{budget.totalSpent.toLocaleString("en-PH")}
+                </h2>
+              </div>
+              <div className="text-right">
+                <span className="text-[10px] font-medium tracking-widest uppercase text-primary">
+                  Budget Status
+                </span>
+                <p className="text-sm font-semibold text-on-surface-variant">
+                  {budgetPercent}% Consumed
+                </p>
+              </div>
+            </div>
+            <div className="h-1.5 w-full bg-surface-container rounded-full overflow-hidden">
+              <div
+                className="h-full bg-linear-to-r from-primary to-primary-dim rounded-full"
+                style={{ width: `${budgetPercent}%` }}
+              />
+            </div>
+          </section>
+
+          {/* Bento Grid */}
+          <div className="grid grid-cols-2 gap-4">
+            {/* Consumption Habits — col-span-2 */}
+            <div className="col-span-2 bg-surface-container-low rounded-xl p-5 space-y-4">
+              <div className="flex justify-between items-center">
+                <h3 className="text-sm font-bold tracking-tight text-on-surface">
+                  Consumption Habits
+                </h3>
+                <span className="material-symbols-outlined text-primary text-sm">
+                  analytics
+                </span>
+              </div>
+              <div className="space-y-3">
+                {consumption.map((item) => (
+                  <div key={item.category} className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <span className="w-8 h-8 flex items-center justify-center bg-surface-container-highest rounded-lg text-primary">
+                        <span className="material-symbols-outlined text-base">
+                          {CATEGORY_ICON[item.category]}
+                        </span>
+                      </span>
+                      <span className="text-sm font-medium text-on-surface-variant">
+                        {item.category}
+                      </span>
+                    </div>
+                    <span className="text-sm font-bold text-on-surface">{item.count}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Most Visited */}
+            <div className="bg-surface-container-low rounded-xl p-5 flex flex-col justify-between aspect-square relative overflow-hidden">
+              <div className="relative z-10">
+                <h3 className="text-xs font-bold tracking-widest uppercase text-on-surface-variant mb-2">
+                  Most Visited
+                </h3>
+                <div className="inline-flex items-center gap-1.5 bg-secondary-container px-3 py-1 rounded-full">
+                  <span className="material-symbols-outlined text-xs text-on-secondary-container">
+                    location_on
+                  </span>
+                  <span className="text-[10px] font-bold text-on-secondary-container uppercase tracking-wider">
+                    {mostVisited.name}
+                  </span>
+                </div>
+              </div>
+              {/* Swap src for mostVisited.mapPhotoUrl when backend provides it */}
+              {mostVisited.mapPhotoUrl && (
+                <div className="absolute inset-0 opacity-10">
+                  <img
+                    src={mostVisited.mapPhotoUrl}
+                    alt="Location map"
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+              )}
+              <p className="relative z-10 text-xs text-on-surface-variant leading-relaxed">
+                {mostVisited.visits} visits this month in {mostVisited.neighborhood}.
+              </p>
+            </div>
+
+            {/* Daily Average */}
+            <div className="bg-surface-container-low rounded-xl p-5 flex flex-col justify-between aspect-square">
+              <div>
+                <h3 className="text-xs font-bold tracking-widest uppercase text-on-surface-variant mb-2">
+                  Daily Average
+                </h3>
+                <div className="text-2xl font-extrabold tracking-tight text-primary">
+                  ₱{dailyAvg.average.toLocaleString("en-PH")}
+                </div>
+              </div>
+              {/* weeklyTrend: 5 values normalized 0–1, oldest → newest */}
+              <div className="flex items-end gap-1 h-8">
+                {dailyAvg.weeklyTrend.map((v, i) => (
+                  <div
+                    key={i}
+                    className={`w-full rounded-sm ${i === 2 ? "bg-primary" : "bg-primary/20"}`}
+                    style={{ height: `${v * 100}%` }}
+                  />
+                ))}
+              </div>
             </div>
           </div>
         </div>
