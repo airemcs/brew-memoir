@@ -317,9 +317,31 @@ export default function HistoryPage() {
 
         {/* Grouped entries */}
         {Object.keys(grouped).length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-20 text-on-surface-variant gap-2">
-            <span className="material-symbols-outlined text-4xl opacity-30">search_off</span>
-            <p className="text-sm font-medium">No entries found</p>
+          <div className="flex flex-col items-center justify-center py-20 text-center gap-6">
+            <div className="w-24 h-24 rounded-2xl bg-surface-container-low flex items-center justify-center">
+              <span className="material-symbols-outlined text-5xl text-on-surface-variant/30">coffee</span>
+            </div>
+            <div className="space-y-2">
+              <h3 className="text-xl font-bold text-on-surface">No rituals found</h3>
+              <p className="text-sm text-on-surface-variant leading-relaxed max-w-55 mx-auto">
+                Try adjusting your filters or search term to discover your previous brews.
+              </p>
+            </div>
+            <div className="flex gap-3">
+              <button
+                type="button"
+                onClick={() => { setSearch(""); setActiveCategory("All"); }}
+                className="px-5 py-3 rounded-xl bg-surface-container text-on-surface text-sm font-bold hover:bg-surface-container-high transition-colors"
+              >
+                Clear Search
+              </button>
+              <Link
+                href="/entry/new"
+                className="px-5 py-3 rounded-xl bg-primary text-on-primary text-sm font-bold hover:bg-primary-dim transition-colors"
+              >
+                Add New Ritual
+              </Link>
+            </div>
           </div>
         ) : (
           <div className="space-y-8">
