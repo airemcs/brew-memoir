@@ -181,7 +181,7 @@ export default function HomePage() {
   const topCafe = getTopCafe();
   const mostVisited = getMostVisited();
   const weeklyAvg = getWeeklyAverageStats();
-  const entries = getRecentEntries();
+  const entries = getRecentEntries().slice(0, 3);
 
   const budgetExceeded = budget.totalSpent > budget.budgetAmount;
   const budgetPercentRaw = Math.round((budget.totalSpent / budget.budgetAmount) * 100);

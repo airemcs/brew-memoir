@@ -276,6 +276,15 @@ export default async function EntryDetailPage({ params }: { params: Promise<{ id
 
       </main>
 
+      {/* ── FAB ── */}
+      <Link
+        href="/entry/new"
+        aria-label="Add new entry"
+        className="fixed bottom-20 right-6 w-12 h-12 bg-primary text-on-primary rounded-xl shadow-xl flex items-center justify-center active:scale-90 transition-transform duration-150 z-50 md:bottom-6"
+      >
+        <span className="material-symbols-outlined text-2xl">add</span>
+      </Link>
+
       {/* ── Bottom Nav (mobile) ── */}
       <nav
         aria-label="Main navigation"

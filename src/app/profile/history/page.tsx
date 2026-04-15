@@ -245,13 +245,21 @@ export default function HistoryPage() {
           </Link>
         </nav>
 
-        <Link
-          href="/entry/new"
-          className="hidden md:flex items-center gap-1.5 bg-primary text-on-primary px-4 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-widest hover:bg-primary-dim active:scale-95 transition-all"
-        >
-          <span className="material-symbols-outlined text-sm">add</span>
-          Add Log
-        </Link>
+        <div className="flex items-center gap-2">
+          <Link
+            href="/entry/new"
+            className="hidden md:flex items-center gap-1.5 bg-primary text-on-primary px-4 py-1.5 rounded-full text-[10px] font-bold uppercase tracking-widest hover:bg-primary-dim active:scale-95 transition-all"
+          >
+            <span className="material-symbols-outlined text-sm">add</span>
+            Add Log
+          </Link>
+          <button
+            aria-label="Notifications"
+            className="material-symbols-outlined text-on-surface-variant p-1.5 hover:bg-surface-container rounded-full transition-colors text-xl"
+          >
+            notifications
+          </button>
+        </div>
       </header>
 
       {/* ── Main ── */}
@@ -336,7 +344,7 @@ export default function HistoryPage() {
                           <div className="space-y-0.5">
                             <div className="font-bold text-sm text-on-surface">{entry.beverageName}</div>
                             <div className="text-xs text-on-surface-variant">
-                              {entry.cafeName}{entry.cafeCity ? ` · ${entry.cafeCity}` : ""}
+                              {entry.cafeName}
                             </div>
                           </div>
                         </div>
@@ -359,6 +367,15 @@ export default function HistoryPage() {
         )}
 
       </main>
+
+      {/* ── FAB ── */}
+      <Link
+        href="/entry/new"
+        aria-label="Add new entry"
+        className="fixed bottom-20 right-6 w-12 h-12 bg-primary text-on-primary rounded-xl shadow-xl flex items-center justify-center active:scale-90 transition-transform duration-150 z-50 md:bottom-6"
+      >
+        <span className="material-symbols-outlined text-2xl">add</span>
+      </Link>
 
       {/* ── Bottom Nav (mobile) ── */}
       <nav
