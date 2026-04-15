@@ -115,6 +115,7 @@ export default function NewEntryPage() {
   const [beverageName, setBeverageName] = useState("");
   const [cafeName, setCafeName] = useState("");
   const [basePrice, setBasePrice] = useState("");
+  const [personalNotes, setPersonalNotes] = useState("");
   const [submitted, setSubmitted] = useState(false);
 
   useEffect(() => {
@@ -185,6 +186,13 @@ export default function NewEntryPage() {
               <span className="text-[10px] uppercase tracking-[0.2em] font-bold text-on-surface-variant">Location</span>
               <p className="text-base font-medium text-on-surface">{cafeName || "—"}</p>
             </div>
+            {personalNotes.trim() && (
+              <div className="pt-4 border-t border-outline-variant/10 space-y-1">
+                <p className="text-sm font-medium text-on-surface-variant italic leading-relaxed">
+                  &ldquo;{personalNotes.trim()}&rdquo;
+                </p>
+              </div>
+            )}
           </div>
         </section>
 
@@ -435,6 +443,20 @@ export default function NewEntryPage() {
             {rating > 0 && (
               <p className="text-xs text-on-surface-variant">{rating} / 5</p>
             )}
+          </section>
+
+          {/* Personal Notes */}
+          <section>
+            <label className="text-[0.75rem] uppercase tracking-widest font-bold text-on-surface-variant block mb-1">
+              Notes
+            </label>
+            <textarea
+              value={personalNotes}
+              onChange={(e) => setPersonalNotes(e.target.value)}
+              placeholder="How did it make you feel? Any thoughts worth keeping?"
+              rows={2}
+              className="w-full bg-transparent border-b border-outline-variant/30 focus:border-primary focus:ring-0 focus:outline-none py-3 px-0 text-base font-medium placeholder:text-outline-variant/50 transition-colors duration-300 resize-none"
+            />
           </section>
 
           {/* Submit */}
