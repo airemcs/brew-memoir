@@ -253,63 +253,38 @@ export default function HomePage() {
 
       {/* ── Main content ── */}
       <main className="pt-16 pb-24 px-4 max-w-5xl mx-auto">
-        {/* Hero summary */}
-        <section className="mb-8 pt-4">
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
-            <div className="space-y-1">
-              <span className="text-[0.625rem] font-medium uppercase tracking-widest text-on-surface-variant">
-                Monthly Overview
+        {/* Monthly Spend Budget */}
+        <section className="space-y-4 mb-6 pt-4">
+          <div className="flex justify-between items-end">
+            <div>
+              <span className="text-[10px] font-medium tracking-widest uppercase text-on-surface-variant">
+                Monthly Spend
               </span>
-              <h2 className="text-4xl font-extrabold tracking-[-0.02em] text-on-surface">
-                {month}
+              <h2 className="text-4xl font-extrabold tracking-tight text-on-background">
+                ₱{budget.totalSpent.toLocaleString("en-PH")}
               </h2>
             </div>
-
-            <div className="flex gap-8 md:gap-12">
-              <div className="space-y-0.5">
-                <span className="text-[0.625rem] font-medium uppercase tracking-widest text-on-surface-variant">
-                  Total Spend
-                </span>
-                <div className="text-2xl font-bold tracking-tight text-primary">
-                  ₱{formatPrice(stats.totalSpent)}
-                </div>
-              </div>
-              <div className="space-y-0.5">
-                <span className="text-[0.625rem] font-medium uppercase tracking-widest text-on-surface-variant">
-                  Avg / Drink
-                </span>
-                <div className="text-2xl font-bold tracking-tight text-on-surface">
-                  ₱{formatPrice(stats.averagePerDrink)}
-                </div>
-              </div>
+            <div className="text-right">
+              <span className="text-[10px] font-medium tracking-widest uppercase text-primary">
+                Budget Status
+              </span>
+              <p className="text-sm font-semibold text-on-surface-variant">
+                {budgetPercent}% Consumed
+              </p>
             </div>
+          </div>
+          <div className="h-1.5 w-full bg-surface-container rounded-full overflow-hidden">
+            <div
+              className="h-full bg-linear-to-r from-primary to-primary-dim rounded-full"
+              style={{ width: `${budgetPercent}%` }}
+            />
           </div>
         </section>
 
-        {/* Bento grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-          {/* Left: stats + top choices */}
-          <div className="lg:col-span-4 space-y-6">
-            {/* Consumption card */}
-            <div className="bg-surface-container-low p-6 rounded-xl space-y-4">
-              <div className="flex items-center justify-between">
-                <span className="material-symbols-outlined text-primary text-xl">
-                  bar_chart
-                </span>
-                <span className="text-[0.625rem] font-bold uppercase tracking-widest text-on-surface-variant">
-                  Consumption
-                </span>
-              </div>
-              <div className="space-y-1">
-                <div className="text-3xl font-bold">{stats.totalDrinks}</div>
-                <p className="text-xs text-on-surface-variant leading-relaxed">
-                  Beverages logged this month. {categoryText}.
-                </p>
-              </div>
-            </div>
-
-            {/* Sensory Palate Overview card */}
-            <div className="bg-surface-container-low p-6 rounded-xl space-y-4">
+        {/* Bento Grid */}
+          <div className="grid grid-cols-2 gap-4">
+            {/* Sensory Palate Overview card — col-span-2 */}
+            <div className="col-span-2 bg-surface-container-low p-6 rounded-xl space-y-4">
               <h3 className="font-bold text-sm tracking-tight text-on-surface">
                 Sensory Palate Overview
               </h3>
@@ -358,128 +333,6 @@ export default function HomePage() {
                 <span className="px-3 py-1 bg-primary-container text-on-primary-container text-[10px] font-bold rounded-full shrink-0">
                   {topCafe.visits} visits
                 </span>
-              </div>
-            </div>
-          </div>
-
-          {/* Right: recent logs */}
-          <div className="lg:col-span-8">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-bold tracking-tight">Recent Logs</h3>
-              <Link
-                href="/profile/history"
-                className="text-primary text-[10px] font-bold uppercase tracking-widest hover:opacity-80 transition-opacity"
-              >
-                View History
-              </Link>
-            </div>
-
-            <div className="bg-surface-container-low rounded-xl overflow-hidden">
-              {entries.map((entry, idx) => (
-                <Link
-                  key={entry._id}
-                  href={`/entry/${entry._id}`}
-                  className={`flex flex-col p-5 hover:bg-surface-container-high transition-colors group${idx < entries.length - 1 ? " border-b border-surface-variant/50" : ""}`}
-                >
-                  <div className="flex items-start justify-between mb-3">
-                    <div className="flex items-center gap-4">
-                      <div className="w-10 h-10 flex items-center justify-center rounded-lg bg-surface-container-lowest text-primary group-hover:scale-95 transition-transform">
-                        <span className="material-symbols-outlined text-xl">
-                          {CATEGORY_ICON[entry.category]}
-                        </span>
-                      </div>
-                      <div className="space-y-0.5">
-                        <div className="font-bold text-sm text-on-surface">
-                          {entry.cafeName}
-                        </div>
-                        <div className="text-xs text-on-surface-variant">
-                          {entry.beverageName}
-                        </div>
-                      </div>
-                    </div>
-                    <div className="font-bold text-sm text-on-surface">
-                      ₱{formatPrice(entry.totalPrice)}
-                    </div>
-                  </div>
-
-                  <div className="flex items-center justify-between pl-14">
-                    <Stars rating={entry.rating} />
-                    <div className="text-[10px] font-medium uppercase tracking-widest text-on-surface-variant opacity-70">
-                      {entry.displayDate}
-                    </div>
-                  </div>
-                </Link>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        {/* ── New Widget Concepts (comparison) ── */}
-        <div className="mt-12 space-y-8 max-w-sm">
-          <div className="flex items-center gap-3">
-            <div className="h-px flex-1 bg-surface-variant" />
-            <span className="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">
-              New Widget Concepts
-            </span>
-            <div className="h-px flex-1 bg-surface-variant" />
-          </div>
-
-          {/* Monthly Spend Budget */}
-          <section className="space-y-4">
-            <div className="flex justify-between items-end">
-              <div>
-                <span className="text-[10px] font-medium tracking-widest uppercase text-on-surface-variant">
-                  Monthly Spend
-                </span>
-                <h2 className="text-4xl font-extrabold tracking-tight text-on-background">
-                  ₱{budget.totalSpent.toLocaleString("en-PH")}
-                </h2>
-              </div>
-              <div className="text-right">
-                <span className="text-[10px] font-medium tracking-widest uppercase text-primary">
-                  Budget Status
-                </span>
-                <p className="text-sm font-semibold text-on-surface-variant">
-                  {budgetPercent}% Consumed
-                </p>
-              </div>
-            </div>
-            <div className="h-1.5 w-full bg-surface-container rounded-full overflow-hidden">
-              <div
-                className="h-full bg-linear-to-r from-primary to-primary-dim rounded-full"
-                style={{ width: `${budgetPercent}%` }}
-              />
-            </div>
-          </section>
-
-          {/* Bento Grid */}
-          <div className="grid grid-cols-2 gap-4">
-            {/* Consumption Habits — col-span-2 */}
-            <div className="col-span-2 bg-surface-container-low rounded-xl p-5 space-y-4">
-              <div className="flex justify-between items-center">
-                <h3 className="text-sm font-bold tracking-tight text-on-surface">
-                  Consumption Habits
-                </h3>
-                <span className="material-symbols-outlined text-primary text-sm">
-                  analytics
-                </span>
-              </div>
-              <div className="space-y-3">
-                {consumption.map((item) => (
-                  <div key={item.category} className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <span className="w-8 h-8 flex items-center justify-center bg-surface-container-highest rounded-lg text-primary">
-                        <span className="material-symbols-outlined text-base">
-                          {CATEGORY_ICON[item.category]}
-                        </span>
-                      </span>
-                      <span className="text-sm font-medium text-on-surface-variant">
-                        {item.category}
-                      </span>
-                    </div>
-                    <span className="text-sm font-bold text-on-surface">{item.count}</span>
-                  </div>
-                ))}
               </div>
             </div>
 
@@ -533,6 +386,59 @@ export default function HomePage() {
                   />
                 ))}
               </div>
+            </div>
+          </div>
+
+        {/* Bento grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          {/* Right: recent logs */}
+          <div className="lg:col-span-8">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-bold tracking-tight">Recent Logs</h3>
+              <Link
+                href="/profile/history"
+                className="text-primary text-[10px] font-bold uppercase tracking-widest hover:opacity-80 transition-opacity"
+              >
+                View History
+              </Link>
+            </div>
+
+            <div className="bg-surface-container-low rounded-xl overflow-hidden">
+              {entries.map((entry, idx) => (
+                <Link
+                  key={entry._id}
+                  href={`/entry/${entry._id}`}
+                  className={`flex flex-col p-5 hover:bg-surface-container-high transition-colors group${idx < entries.length - 1 ? " border-b border-surface-variant/50" : ""}`}
+                >
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex items-center gap-4">
+                      <div className="w-10 h-10 flex items-center justify-center rounded-lg bg-surface-container-lowest text-primary group-hover:scale-95 transition-transform">
+                        <span className="material-symbols-outlined text-xl">
+                          {CATEGORY_ICON[entry.category]}
+                        </span>
+                      </div>
+                      <div className="space-y-0.5">
+                        <div className="font-bold text-sm text-on-surface">
+                          {entry.cafeName}
+                        </div>
+                        <div className="text-xs text-on-surface-variant">
+                          {entry.beverageName}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="font-bold text-sm text-on-surface">
+                      ₱{formatPrice(entry.totalPrice)}
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between pl-14">
+                    <Stars rating={entry.rating} />
+                    <div className="text-[10px] font-medium uppercase tracking-widest text-on-surface-variant opacity-70">
+                      {entry.displayDate}
+                    </div>
+                  </div>
+                </Link>
+              ))}
             </div>
           </div>
         </div>
