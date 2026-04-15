@@ -266,7 +266,7 @@ export default function HistoryPage() {
       </header>
 
       {/* ── Main ── */}
-      <main className="pt-16 pb-32 px-4 max-w-2xl mx-auto space-y-6">
+      <main className="pt-16 pb-32 px-6 max-w-2xl mx-auto space-y-6">
 
         {/* Search + Filters */}
         <section className="pt-4 space-y-4">
