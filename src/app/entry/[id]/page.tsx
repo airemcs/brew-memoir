@@ -12,6 +12,7 @@ const STATIC_ENTRIES: (IEntry & { displayDate: string })[] = [
     userId: "static",
     beverageName: "Matcha Latte",
     cafeName: "Starbucks",
+    cafeCity: "BGC, Taguig",
     category: "Matcha",
     date: new Date().toISOString(),
     displayDate: "Today, 10:15 AM",
@@ -33,6 +34,7 @@ const STATIC_ENTRIES: (IEntry & { displayDate: string })[] = [
     userId: "static",
     beverageName: "Toasted Hojicha Flat White",
     cafeName: "Kurasu",
+    cafeCity: "Poblacion, Makati",
     category: "Hojicha",
     date: new Date(Date.now() - 86400000).toISOString(),
     displayDate: "Yesterday",
@@ -50,6 +52,7 @@ const STATIC_ENTRIES: (IEntry & { displayDate: string })[] = [
     userId: "static",
     beverageName: "V60 Pour Over (Ethiopia)",
     cafeName: "Sightglass",
+    cafeCity: "Salcedo Village, Makati",
     category: "Coffee",
     date: "2024-09-12T09:00:00.000Z",
     displayDate: "Sep 12",
@@ -69,6 +72,7 @@ const STATIC_ENTRIES: (IEntry & { displayDate: string })[] = [
     userId: "static",
     beverageName: "White Peony Loose Leaf",
     cafeName: "Tea Atelier",
+    cafeCity: "Quezon City",
     category: "Fruit & Refresher",
     date: "2024-09-11T14:30:00.000Z",
     displayDate: "Sep 11",
@@ -212,6 +216,9 @@ export default async function EntryDetailPage({ params }: { params: Promise<{ id
                 The Venue
               </span>
               <h3 className="text-base font-bold text-on-surface mt-1">{entry.cafeName}</h3>
+              {entry.cafeCity && (
+                <p className="text-sm text-on-surface-variant mt-0.5">{entry.cafeCity}</p>
+              )}
             </div>
 
             <hr className="border-outline-variant/20 my-4" />

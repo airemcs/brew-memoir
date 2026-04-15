@@ -114,6 +114,7 @@ export default function NewEntryPage() {
   const [sheetPrice, setSheetPrice] = useState("");
   const [beverageName, setBeverageName] = useState("");
   const [cafeName, setCafeName] = useState("");
+  const [cafeCity, setCafeCity] = useState("");
   const [basePrice, setBasePrice] = useState("");
   const [personalNotes, setPersonalNotes] = useState("");
   const [submitted, setSubmitted] = useState(false);
@@ -185,6 +186,9 @@ export default function NewEntryPage() {
             <div className="space-y-1">
               <span className="text-[10px] uppercase tracking-[0.2em] font-bold text-on-surface-variant">Location</span>
               <p className="text-base font-medium text-on-surface">{cafeName || "—"}</p>
+              {cafeCity && (
+                <p className="text-xs text-on-surface-variant mt-0.5">{cafeCity}</p>
+              )}
             </div>
             {personalNotes.trim() && (
               <div className="pt-4 border-t border-outline-variant/10 space-y-1">
@@ -350,6 +354,19 @@ export default function NewEntryPage() {
                 value={cafeName}
                 onChange={(e) => setCafeName(e.target.value)}
                 placeholder="Yardstick Coffee"
+                className="w-full bg-transparent border-0 border-b border-outline-variant/30 focus:border-primary focus:ring-0 focus:outline-none py-3 px-0 text-xl font-medium placeholder:text-outline-variant/50 transition-colors duration-300"
+              />
+            </div>
+
+            <div>
+              <label className="text-[0.75rem] uppercase tracking-widest font-bold text-on-surface-variant block mb-1">
+                City
+              </label>
+              <input
+                type="text"
+                value={cafeCity}
+                onChange={(e) => setCafeCity(e.target.value)}
+                placeholder="Makati, Metro Manila"
                 className="w-full bg-transparent border-0 border-b border-outline-variant/30 focus:border-primary focus:ring-0 focus:outline-none py-3 px-0 text-xl font-medium placeholder:text-outline-variant/50 transition-colors duration-300"
               />
             </div>

@@ -83,6 +83,7 @@ export interface IEntry {
   userId: string;
   cafeName: string;
   cafeId?: string;
+  cafeCity?: string;
   beverageName: string;
   category: BeverageCategory;
   date: string;
@@ -167,6 +168,7 @@ export interface OverviewStats {
 export interface CreateEntryInput {
   cafeName: string;
   cafeId?: string;
+  cafeCity?: string;
   beverageName: string;
   category: BeverageCategory;
   date: string;

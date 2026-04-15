@@ -61,14 +61,15 @@ function getRecentEntries(): (IEntry & { displayDate: string })[] {
     {
       _id: "static-1",
       userId: "static",
-      cafeName: "Matcha Latte",
-      beverageName: "Starbucks",
+      cafeName: "Starbucks",
+      cafeCity: "BGC, Taguig",
+      beverageName: "Matcha Latte",
       category: "Matcha",
       date: new Date().toISOString(),
       displayDate: "Today, 10:15 AM",
-      basePrice: 107.25,
+      basePrice: 175,
       addOns: [],
-      totalPrice: 107.25,
+      totalPrice: 175,
       rating: 5,
       tastingNotes: [],
       createdAt: new Date().toISOString(),
@@ -78,6 +79,7 @@ function getRecentEntries(): (IEntry & { displayDate: string })[] {
       _id: "static-2",
       userId: "static",
       cafeName: "Kurasu",
+      cafeCity: "Poblacion, Makati",
       beverageName: "Toasted Hojicha Flat White",
       category: "Hojicha",
       date: new Date(Date.now() - 86400000).toISOString(),
@@ -94,6 +96,7 @@ function getRecentEntries(): (IEntry & { displayDate: string })[] {
       _id: "static-3",
       userId: "static",
       cafeName: "Sightglass",
+      cafeCity: "Salcedo Village, Makati",
       beverageName: "V60 Pour Over (Ethiopia)",
       category: "Coffee",
       date: "2024-09-12T09:00:00.000Z",
@@ -110,6 +113,7 @@ function getRecentEntries(): (IEntry & { displayDate: string })[] {
       _id: "static-4",
       userId: "static",
       cafeName: "Tea Atelier",
+      cafeCity: "Quezon City",
       beverageName: "White Peony Loose Leaf",
       category: "Fruit & Refresher",
       date: "2024-09-11T14:30:00.000Z",
@@ -371,7 +375,9 @@ export default function HomePage() {
                     </div>
                     <div className="space-y-0.5">
                       <div className="font-bold text-sm text-on-surface">{entry.beverageName}</div>
-                      <div className="text-xs text-on-surface-variant">{entry.cafeName}</div>
+                      <div className="text-xs text-on-surface-variant">
+                        {entry.cafeName}
+                      </div>
                     </div>
                   </div>
                   <div className="font-bold text-sm text-on-surface">
