@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { AddOn, AddOnCategory, BeverageCategory } from "@/types";
 import { ADDON_CATEGORIES, BEVERAGE_CATEGORIES } from "@/types";
 
@@ -96,6 +96,97 @@ function StarRating({
           </span>
         );
       })}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// CityInput — autocomplete that seeds from common PH neighborhoods and
+// persists any new city the user enters to localStorage.
+// ---------------------------------------------------------------------------
+
+const SEED_CITIES = [
+  "BGC, Taguig", "Poblacion, Makati", "Salcedo Village, Makati",
+  "Legazpi Village, Makati", "Greenbelt, Makati", "Rockwell, Makati",
+  "San Juan, Metro Manila", "Kapitolyo, Pasig", "Ortigas, Pasig",
+  "Eastwood, Quezon City", "Katipunan, Quezon City", "Maginhawa, Quezon City",
+  "Timog, Quezon City", "Cubao, Quezon City", "Alabang, Muntinlupa",
+  "Intramuros, Manila", "Ermita, Manila", "Malate, Manila",
+];
+const LS_KEY = "brew-memoir:cities";
+
+function CityInput({ value, onChange }: { value: string; onChange: (v: string) => void }) {
+  const [open, setOpen] = useState(false);
+  const [allCities, setAllCities] = useState<string[]>(SEED_CITIES);
+  const wrapperRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    try {
+      const stored = JSON.parse(localStorage.getItem(LS_KEY) ?? "[]") as string[];
+      const merged = Array.from(new Set([...stored, ...SEED_CITIES]));
+      setAllCities(merged);
+    } catch { /* ignore */ }
+  }, []);
+
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (wrapperRef.current && !wrapperRef.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  function handleSelect(city: string) {
+    onChange(city);
+    setOpen(false);
+  }
+
+  function handleBlurSave() {
+    const trimmed = value.trim();
+    if (!trimmed) return;
+    try {
+      const stored = JSON.parse(localStorage.getItem(LS_KEY) ?? "[]") as string[];
+      if (!stored.includes(trimmed)) {
+        localStorage.setItem(LS_KEY, JSON.stringify([trimmed, ...stored]));
+        setAllCities((prev) => Array.from(new Set([trimmed, ...prev])));
+      }
+    } catch { /* ignore */ }
+  }
+
+  const filtered = allCities.filter((c) =>
+    c.toLowerCase().includes(value.toLowerCase())
+  );
+
+  return (
+    <div ref={wrapperRef} className="relative">
+      <input
+        type="text"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        onFocus={() => setOpen(true)}
+        onBlur={handleBlurSave}
+        placeholder="Makati, Metro Manila"
+        className="w-full bg-transparent border-0 border-b border-outline-variant/30 focus:border-primary focus:ring-0 focus:outline-none py-3 px-0 text-xl font-medium placeholder:text-outline-variant/50 transition-colors duration-300"
+      />
+      {open && filtered.length > 0 && (
+        <ul className="absolute z-20 top-full left-0 w-full bg-surface-container-lowest rounded-xl shadow-lg border border-outline-variant/10 mt-1 max-h-52 overflow-y-auto">
+          {filtered.map((city) => (
+            <li key={city}>
+              <button
+                type="button"
+                onMouseDown={() => handleSelect(city)}
+                className={`w-full text-left px-4 py-3 text-sm font-medium transition-colors hover:bg-surface-container-low ${
+                  city === value ? "text-primary font-bold" : "text-on-surface"
+                }`}
+              >
+                {city}
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 }
@@ -362,13 +453,7 @@ export default function NewEntryPage() {
               <label className="text-[0.75rem] uppercase tracking-widest font-bold text-on-surface-variant block mb-1">
                 City
               </label>
-              <input
-                type="text"
-                value={cafeCity}
-                onChange={(e) => setCafeCity(e.target.value)}
-                placeholder="Makati, Metro Manila"
-                className="w-full bg-transparent border-0 border-b border-outline-variant/30 focus:border-primary focus:ring-0 focus:outline-none py-3 px-0 text-xl font-medium placeholder:text-outline-variant/50 transition-colors duration-300"
-              />
+              <CityInput value={cafeCity} onChange={setCafeCity} />
             </div>
 
             <div className="grid grid-cols-2 gap-8">
