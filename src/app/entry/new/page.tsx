@@ -112,6 +112,10 @@ export default function NewEntryPage() {
   const [sheetCategory, setSheetCategory] = useState<AddOnCategory>("alternative");
   const [sheetName, setSheetName] = useState("");
   const [sheetPrice, setSheetPrice] = useState("");
+  const [beverageName, setBeverageName] = useState("");
+  const [cafeName, setCafeName] = useState("");
+  const [basePrice, setBasePrice] = useState("");
+  const [submitted, setSubmitted] = useState(false);
 
   useEffect(() => {
     document.body.style.overflow = showSheet ? "hidden" : "";
@@ -126,6 +130,91 @@ export default function NewEntryPage() {
     setSheetName("");
     setSheetPrice("");
     setSheetCategory("alternative");
+  }
+
+  if (submitted) {
+    const totalPrice =
+      (parseFloat(basePrice) || 0) +
+      addOns.reduce((sum, a) => sum + a.price, 0);
+
+    return (
+      <main className="relative w-full max-w-md mx-auto px-8 min-h-dvh flex flex-col items-center justify-center text-center">
+        {/* Soft glow */}
+        <div
+          className="absolute inset-0 -z-10 pointer-events-none"
+          style={{ background: "radial-gradient(circle at center, rgba(121,87,63,0.08) 0%, rgba(251,249,247,0) 70%)" }}
+        />
+
+        {/* Check icon */}
+        <div className="mb-12 relative">
+          <div className="w-24 h-24 rounded-full bg-surface-container-low flex items-center justify-center">
+            <span
+              className="material-symbols-outlined text-primary text-5xl"
+              style={{ fontVariationSettings: "'wght' 200" }}
+            >
+              check_circle
+            </span>
+          </div>
+          <div className="absolute -top-2 -right-2 w-4 h-4 rounded-full bg-secondary-container" />
+          <div className="absolute bottom-4 -left-6 w-2 h-2 rounded-full bg-primary-fixed" />
+        </div>
+
+        {/* Headline */}
+        <div className="space-y-3 mb-10">
+          <h1 className="text-3xl font-bold tracking-tight text-on-surface">Ritual Recorded</h1>
+          <p className="text-sm text-on-surface-variant font-medium leading-relaxed opacity-80">
+            Your sensory journey has been added to the archive.
+          </p>
+        </div>
+
+        {/* Summary card */}
+        <section className="w-full bg-surface-container-low p-8 rounded-xl mb-12 text-left">
+          <div className="flex flex-col gap-6">
+            <div className="flex justify-between items-start">
+              <div className="space-y-1">
+                <span className="text-[10px] uppercase tracking-[0.2em] font-bold text-on-surface-variant">Beverage</span>
+                <h2 className="text-lg font-bold text-on-surface">{beverageName || "—"}</h2>
+              </div>
+              <div className="px-3 py-1 rounded-full bg-secondary-container">
+                <span className="text-[11px] font-bold text-on-secondary-container tracking-wider flex">
+                  ₱{totalPrice.toLocaleString("en-PH", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                </span>
+              </div>
+            </div>
+            <div className="space-y-1">
+              <span className="text-[10px] uppercase tracking-[0.2em] font-bold text-on-surface-variant">Location</span>
+              <p className="text-base font-medium text-on-surface">{cafeName || "—"}</p>
+            </div>
+          </div>
+        </section>
+
+        {/* Actions */}
+        <div className="w-full space-y-4">
+          <Link
+            href="/"
+            className="block w-full bg-linear-to-br from-primary to-primary-dim text-on-primary font-bold py-4 rounded-xl shadow-lg text-center active:scale-[0.98] transition-all"
+          >
+            Back to Journal
+          </Link>
+          <div className="flex items-center justify-center gap-8 pt-4">
+            <button
+              type="button"
+              className="text-primary text-xs font-bold uppercase tracking-widest hover:opacity-70 transition-opacity"
+            >
+              View History
+            </button>
+            <div className="w-1 h-1 rounded-full bg-outline-variant/30" />
+            <button
+              type="button"
+              className="text-primary text-xs font-bold uppercase tracking-widest hover:opacity-70 transition-opacity flex items-center gap-2"
+            >
+              <span className="material-symbols-outlined text-sm">share</span>
+              Share Ritual
+            </button>
+          </div>
+        </div>
+      </main>
+    );
   }
 
   return (
@@ -198,7 +287,7 @@ export default function NewEntryPage() {
           </p>
         </div>
 
-        <form className="space-y-12" onSubmit={(e) => e.preventDefault()}>
+        <form className="space-y-12" onSubmit={(e) => { e.preventDefault(); setSubmitted(true); }}>
 
           {/* Category */}
           <section>
@@ -237,6 +326,8 @@ export default function NewEntryPage() {
               </label>
               <input
                 type="text"
+                value={beverageName}
+                onChange={(e) => setBeverageName(e.target.value)}
                 placeholder="Ethiopia Yirgacheffe V60"
                 className="w-full bg-transparent border-0 border-b border-outline-variant/30 focus:border-primary focus:ring-0 focus:outline-none py-3 px-0 text-xl font-medium placeholder:text-outline-variant/50 transition-colors duration-300"
               />
@@ -248,6 +339,8 @@ export default function NewEntryPage() {
               </label>
               <input
                 type="text"
+                value={cafeName}
+                onChange={(e) => setCafeName(e.target.value)}
                 placeholder="Yardstick Coffee"
                 className="w-full bg-transparent border-0 border-b border-outline-variant/30 focus:border-primary focus:ring-0 focus:outline-none py-3 px-0 text-xl font-medium placeholder:text-outline-variant/50 transition-colors duration-300"
               />
@@ -275,6 +368,8 @@ export default function NewEntryPage() {
                     min={0}
                     step={0.5}
                     placeholder="180.00"
+                    value={basePrice}
+                    onChange={(e) => setBasePrice(e.target.value)}
                     className="w-full bg-transparent border-0 focus:ring-0 focus:outline-none py-2 px-0 text-base font-medium placeholder:text-outline-variant/50"
                   />
                 </div>
