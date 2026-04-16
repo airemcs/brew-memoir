@@ -1,9 +1,13 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { Types } from "mongoose";
 import type { BeverageCategory, IEntry } from "@/types";
+import { connectDB } from "@/lib/db";
+import { Cafe, Entry } from "@/lib/models";
+import { getServerUserId } from "@/lib/serverAuth";
 
 // ---------------------------------------------------------------------------
-// Data layer — replace with: GET /api/cafes/:id
+// Data layer
 // ---------------------------------------------------------------------------
 
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"] as const;
@@ -15,138 +19,87 @@ interface CafeDetail {
   neighborhood: string;
   totalSpent: number;
   totalVisits: number;
-  // visits per day of week, index 0 = Mon — replace with real aggregation
   visitsByDay: [number, number, number, number, number, number, number];
   weeklyAverage: number;
   entries: (IEntry & { displayDate: string })[];
 }
 
-const STATIC_CAFES: CafeDetail[] = [
-  {
-    _id: "cafe-1",
-    name: "Yardstick Coffee",
-    address: "Salcedo Village, Makati",
-    neighborhood: "Salcedo Village, Makati",
-    totalSpent: 5840,
-    totalVisits: 12,
-    visitsByDay: [3, 4, 7, 5, 4, 2, 2],
-    weeklyAverage: 3.2,
-    entries: [
-      {
-        _id: "static-5", userId: "static", cafeName: "Yardstick Coffee", cafeCity: "Salcedo Village, Makati",
-        beverageName: "Single Origin Pourover", category: "Coffee",
-        date: "2024-10-24T09:00:00.000Z", displayDate: "Oct 24, 2024",
-        basePrice: 280, addOns: [], totalPrice: 280, rating: 5,
-        tastingNotes: [], createdAt: "", updatedAt: "",
-      },
-      {
-        _id: "static-6", userId: "static", cafeName: "Yardstick Coffee", cafeCity: "Salcedo Village, Makati",
-        beverageName: "Iced Spanish Latte", category: "Espresso & Milk",
-        date: "2024-10-21T10:30:00.000Z", displayDate: "Oct 21, 2024",
-        basePrice: 240, addOns: [], totalPrice: 240, rating: 4,
-        tastingNotes: [], createdAt: "", updatedAt: "",
-      },
-    ],
-  },
-  {
-    _id: "cafe-2",
-    name: "Kurasu",
-    address: "Poblacion, Makati",
-    neighborhood: "Poblacion, Makati",
-    totalSpent: 4250,
-    totalVisits: 6,
-    visitsByDay: [1, 2, 3, 4, 5, 3, 1],
-    weeklyAverage: 1.8,
-    entries: [
-      {
-        _id: "static-2", userId: "static", cafeName: "Kurasu", cafeCity: "Poblacion, Makati",
-        beverageName: "Toasted Hojicha Flat White", category: "Hojicha",
-        date: "2024-10-15T14:00:00.000Z", displayDate: "Oct 15, 2024",
-        basePrice: 320, addOns: [], totalPrice: 320, rating: 4,
-        tastingNotes: [], createdAt: "", updatedAt: "",
-      },
-    ],
-  },
-  {
-    _id: "cafe-3",
-    name: "Sightglass",
-    address: "Legazpi Village, Makati",
-    neighborhood: "Legazpi Village, Makati",
-    totalSpent: 3960,
-    totalVisits: 8,
-    visitsByDay: [2, 3, 5, 4, 3, 2, 1],
-    weeklyAverage: 2.4,
-    entries: [
-      {
-        _id: "static-3", userId: "static", cafeName: "Sightglass", cafeCity: "Legazpi Village, Makati",
-        beverageName: "V60 Pour Over (Ethiopia)", category: "Coffee",
-        date: "2024-10-08T09:00:00.000Z", displayDate: "Oct 08, 2024",
-        basePrice: 210, addOns: [], totalPrice: 210, rating: 4.5,
-        tastingNotes: [], createdAt: "", updatedAt: "",
-      },
-    ],
-  },
-  {
-    _id: "cafe-4",
-    name: "The Curator",
-    address: "Legazpi Village, Makati",
-    neighborhood: "Legazpi Village, Makati",
-    totalSpent: 2450,
-    totalVisits: 5,
-    visitsByDay: [1, 1, 4, 2, 3, 2, 1],
-    weeklyAverage: 1.5,
-    entries: [
-      {
-        _id: "static-7", userId: "static", cafeName: "The Curator", cafeCity: "Legazpi Village, Makati",
-        beverageName: "Peachy Flat White", category: "Espresso & Milk",
-        date: "2024-09-30T09:45:00.000Z", displayDate: "Sept 30, 2024",
-        basePrice: 290, addOns: [], totalPrice: 290, rating: 4.5,
-        tastingNotes: [], createdAt: "", updatedAt: "",
-      },
-    ],
-  },
-  {
-    _id: "cafe-5",
-    name: "Commune",
-    address: "Kapitolyo, Pasig",
-    neighborhood: "Kapitolyo, Pasig",
-    totalSpent: 1780,
-    totalVisits: 4,
-    visitsByDay: [1, 1, 2, 2, 3, 3, 2],
-    weeklyAverage: 1.2,
-    entries: [
-      {
-        _id: "static-8", userId: "static", cafeName: "Commune", cafeCity: "Kapitolyo, Pasig",
-        beverageName: "Iced Matcha Latte", category: "Matcha",
-        date: "2024-09-22T13:00:00.000Z", displayDate: "Sept 22, 2024",
-        basePrice: 260, addOns: [], totalPrice: 260, rating: 4,
-        tastingNotes: [], createdAt: "", updatedAt: "",
-      },
-    ],
-  },
-  {
-    _id: "cafe-6",
-    name: "Kalsada Coffee",
-    address: "Katipunan, Quezon City",
-    neighborhood: "Katipunan, Quezon City",
-    totalSpent: 1260,
-    totalVisits: 3,
-    visitsByDay: [1, 0, 2, 1, 2, 1, 0],
-    weeklyAverage: 0.9,
-    entries: [
-      {
-        _id: "static-9", userId: "static", cafeName: "Kalsada Coffee", cafeCity: "Katipunan, Quezon City",
-        beverageName: "Benguet Drip Coffee", category: "Coffee",
-        date: "2024-09-10T09:00:00.000Z", displayDate: "Sept 10, 2024",
-        basePrice: 180, addOns: [], totalPrice: 180, rating: 4.5,
-        tastingNotes: [], createdAt: "", updatedAt: "",
-      },
-    ],
-  },
-];
+async function getCafe(id: string): Promise<CafeDetail | null> {
+  if (!Types.ObjectId.isValid(id)) return null;
 
-function getCafe(id: string): CafeDetail | null {
-  return STATIC_CAFES.find((c) => c._id === id) ?? null;
+  const userId = await getServerUserId();
+  if (!userId) return null;
+
+  await connectDB();
+  const userObjectId = new Types.ObjectId(userId);
+  const cafeObjectId = new Types.ObjectId(id);
+
+  const cafe = await Cafe.findOne({ _id: cafeObjectId, userId: userObjectId }).lean();
+  if (!cafe) return null;
+
+  // Summary stats
+  const [summary] = await Entry.aggregate([
+    { $match: { userId: userObjectId, cafeId: cafeObjectId } },
+    {
+      $group: {
+        _id: null,
+        totalVisits: { $sum: 1 },
+        totalSpent: { $sum: "$totalPrice" },
+        firstVisit: { $min: "$date" },
+      },
+    },
+  ]);
+
+  const totalVisits: number = summary?.totalVisits ?? 0;
+  const totalSpent: number = summary?.totalSpent ?? 0;
+
+  // weeklyAverage — null-safe: returns raw visit count if < 1 week old
+  let weeklyAverage = 0;
+  if (summary?.firstVisit) {
+    const weeks = (Date.now() - new Date(summary.firstVisit).getTime()) / (7 * 24 * 60 * 60 * 1000);
+    weeklyAverage = weeks >= 1 ? Math.round((totalVisits / weeks) * 10) / 10 : totalVisits;
+  }
+
+  // visitsByDay[7] (0=Mon … 6=Sun)
+  // $dayOfWeek: 1=Sun … 7=Sat → remap: Sun→6, Mon→0, …, Sat→5
+  const dayAgg = await Entry.aggregate([
+    { $match: { userId: userObjectId, cafeId: cafeObjectId } },
+    { $group: { _id: { $dayOfWeek: "$date" }, count: { $sum: 1 } } },
+  ]);
+
+  const visitsByDay: [number, number, number, number, number, number, number] = [0, 0, 0, 0, 0, 0, 0];
+  for (const { _id, count } of dayAgg) {
+    visitsByDay[_id === 1 ? 6 : _id - 2] = count;
+  }
+
+  // Brew history entries
+  const rawEntries = await Entry.find({ userId: userObjectId, cafeId: cafeObjectId })
+    .sort({ date: -1 })
+    .limit(20)
+    .lean();
+
+  const entries: (IEntry & { displayDate: string })[] = JSON.parse(JSON.stringify(rawEntries)).map(
+    (e: IEntry) => ({
+      ...e,
+      displayDate: new Date(e.date).toLocaleDateString("en-US", {
+        month: "short",
+        day: "numeric",
+        year: "numeric",
+      }),
+    })
+  );
+
+  return {
+    _id: cafe._id.toString(),
+    name: cafe.name,
+    address: cafe.address ?? "",
+    neighborhood: cafe.neighborhood ?? cafe.address ?? "",
+    totalSpent,
+    totalVisits,
+    visitsByDay,
+    weeklyAverage,
+    entries,
+  };
 }
 
 // ---------------------------------------------------------------------------
@@ -191,7 +144,7 @@ function Stars({ rating }: { rating: number }) {
 
 export default async function CafeDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const cafe = getCafe(id);
+  const cafe = await getCafe(id);
   if (!cafe) notFound();
 
   const maxVisits = Math.max(...cafe.visitsByDay);

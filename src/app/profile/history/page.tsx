@@ -1,152 +1,21 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { BeverageCategory, IEntry } from "@/types";
 import { BEVERAGE_CATEGORIES } from "@/types";
 
 // ---------------------------------------------------------------------------
-// Static data — replace with GET /api/entries (paginated, sorted by date desc)
+// Helpers
 // ---------------------------------------------------------------------------
 
-const ALL_ENTRIES: (IEntry & { displayDate: string })[] = [
-  {
-    _id: "static-1",
-    userId: "static",
-    beverageName: "Matcha Latte",
-    cafeName: "Starbucks",
-    cafeCity: "BGC, Taguig",
-    category: "Matcha",
-    date: "2024-10-26T10:15:00.000Z",
-    displayDate: "Oct 26",
-    basePrice: 175,
-    addOns: [],
-    totalPrice: 315,
-    rating: 5,
-    tastingNotes: [],
-    createdAt: "2024-10-26T10:15:00.000Z",
-    updatedAt: "2024-10-26T10:15:00.000Z",
-  },
-  {
-    _id: "static-2",
-    userId: "static",
-    beverageName: "Toasted Hojicha Flat White",
-    cafeName: "Kurasu",
-    cafeCity: "Poblacion, Makati",
-    category: "Hojicha",
-    date: "2024-10-24T14:00:00.000Z",
-    displayDate: "Oct 24",
-    basePrice: 96.5,
-    addOns: [],
-    totalPrice: 106.5,
-    rating: 4,
-    tastingNotes: [],
-    createdAt: "2024-10-24T14:00:00.000Z",
-    updatedAt: "2024-10-24T14:00:00.000Z",
-  },
-  {
-    _id: "static-5",
-    userId: "static",
-    beverageName: "Hojicha Latte",
-    cafeName: "Blue Bottle Coffee",
-    cafeCity: "Rockwell, Makati",
-    category: "Hojicha",
-    date: "2024-10-20T09:30:00.000Z",
-    displayDate: "Oct 20",
-    basePrice: 195,
-    addOns: [],
-    totalPrice: 195,
-    rating: 3,
-    tastingNotes: [],
-    createdAt: "2024-10-20T09:30:00.000Z",
-    updatedAt: "2024-10-20T09:30:00.000Z",
-  },
-  {
-    _id: "static-6",
-    userId: "static",
-    beverageName: "Cascara Tonic",
-    cafeName: "The Curator",
-    cafeCity: "Legazpi Village, Makati",
-    category: "Specialty",
-    date: "2024-09-30T16:00:00.000Z",
-    displayDate: "Sept 30",
-    basePrice: 220,
-    addOns: [],
-    totalPrice: 220,
-    rating: 5,
-    tastingNotes: [],
-    createdAt: "2024-09-30T16:00:00.000Z",
-    updatedAt: "2024-09-30T16:00:00.000Z",
-  },
-  {
-    _id: "static-3",
-    userId: "static",
-    beverageName: "V60 Pour Over (Ethiopia)",
-    cafeName: "Sightglass",
-    cafeCity: "Salcedo Village, Makati",
-    category: "Coffee",
-    date: "2024-09-12T09:00:00.000Z",
-    displayDate: "Sept 12",
-    basePrice: 180,
-    addOns: [],
-    totalPrice: 210,
-    rating: 4.5,
-    tastingNotes: [],
-    createdAt: "2024-09-12T09:00:00.000Z",
-    updatedAt: "2024-09-12T09:00:00.000Z",
-  },
-  {
-    _id: "static-7",
-    userId: "static",
-    beverageName: "Spanish Latte",
-    cafeName: "Habitual Coffee",
-    cafeCity: "Kapitolyo, Pasig",
-    category: "Espresso & Milk",
-    date: "2024-09-05T08:00:00.000Z",
-    displayDate: "Sept 5",
-    basePrice: 160,
-    addOns: [],
-    totalPrice: 160,
-    rating: 4,
-    tastingNotes: [],
-    createdAt: "2024-09-05T08:00:00.000Z",
-    updatedAt: "2024-09-05T08:00:00.000Z",
-  },
-  {
-    _id: "static-4",
-    userId: "static",
-    beverageName: "White Peony Loose Leaf",
-    cafeName: "Tea Atelier",
-    cafeCity: "Quezon City",
-    category: "Tea",
-    date: "2024-08-11T14:30:00.000Z",
-    displayDate: "Aug 11",
-    basePrice: 105.5,
-    addOns: [],
-    totalPrice: 105.5,
-    rating: 4,
-    tastingNotes: [],
-    createdAt: "2024-08-11T14:30:00.000Z",
-    updatedAt: "2024-08-11T14:30:00.000Z",
-  },
-  {
-    _id: "static-8",
-    userId: "static",
-    beverageName: "Iced Americano",
-    cafeName: "Yardstick Coffee",
-    cafeCity: "Salcedo Village, Makati",
-    category: "Coffee",
-    date: "2024-08-03T07:45:00.000Z",
-    displayDate: "Aug 3",
-    basePrice: 130,
-    addOns: [],
-    totalPrice: 130,
-    rating: 5,
-    tastingNotes: [],
-    createdAt: "2024-08-03T07:45:00.000Z",
-    updatedAt: "2024-08-03T07:45:00.000Z",
-  },
-];
+function computeDisplayDate(dateStr: string): string {
+  const d = new Date(dateStr);
+  const diffDays = Math.floor((Date.now() - d.getTime()) / 86_400_000);
+  if (diffDays === 0) return "Today";
+  if (diffDays === 1) return "Yesterday";
+  return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+}
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -201,11 +70,29 @@ function Stars({ rating }: { rating: number }) {
 // Page
 // ---------------------------------------------------------------------------
 
+type EntryWithDisplay = IEntry & { displayDate: string };
+
 export default function HistoryPage() {
+  const [allEntries, setAllEntries] = useState<EntryWithDisplay[]>([]);
+  const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [activeCategory, setActiveCategory] = useState<BeverageCategory | "All">("All");
 
-  const filtered = ALL_ENTRIES.filter((e) => {
+  useEffect(() => {
+    fetch("/api/entries?limit=100")
+      .then((r) => r.json())
+      .then((data) => {
+        const entries: EntryWithDisplay[] = (data.entries ?? []).map((e: IEntry) => ({
+          ...e,
+          displayDate: computeDisplayDate(e.date),
+        }));
+        setAllEntries(entries);
+      })
+      .catch(console.error)
+      .finally(() => setLoading(false));
+  }, []);
+
+  const filtered = allEntries.filter((e) => {
     const matchesCategory = activeCategory === "All" || e.category === activeCategory;
     const q = search.toLowerCase();
     const matchesSearch =
@@ -217,7 +104,7 @@ export default function HistoryPage() {
   });
 
   // Group by month label, preserving order (entries are sorted newest first)
-  const grouped = filtered.reduce<Record<string, typeof filtered>>((acc, entry) => {
+  const grouped = filtered.reduce<Record<string, EntryWithDisplay[]>>((acc, entry) => {
     const label = monthLabel(entry.date);
     if (!acc[label]) acc[label] = [];
     acc[label].push(entry);
@@ -316,7 +203,11 @@ export default function HistoryPage() {
         </section>
 
         {/* Grouped entries */}
-        {Object.keys(grouped).length === 0 ? (
+        {loading ? (
+          <div className="flex items-center justify-center py-20">
+            <span className="material-symbols-outlined text-3xl text-on-surface-variant/40 animate-spin">progress_activity</span>
+          </div>
+        ) : Object.keys(grouped).length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-center gap-6">
             <div className="w-24 h-24 rounded-2xl bg-surface-container-low flex items-center justify-center">
               <span className="material-symbols-outlined text-5xl text-on-surface-variant/30">coffee</span>

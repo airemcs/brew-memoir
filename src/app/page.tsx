@@ -1,132 +1,165 @@
 import Link from "next/link";
-import type { BeverageCategory, IEntry, OverviewStats } from "@/types";
+import { Types } from "mongoose";
+import type { BeverageCategory, IEntry } from "@/types";
+import { connectDB } from "@/lib/db";
+import { Entry } from "@/lib/models";
+import { getServerUserId } from "@/lib/serverAuth";
 
 // ---------------------------------------------------------------------------
-// Data layer — replace these with async DB / API calls when backend is ready.
-// The return types intentionally match the shared types in src/types/index.ts
-// so swapping in real data requires only changing the function bodies.
+// Data layer
 // ---------------------------------------------------------------------------
 
-// Replace with: GET /api/analytics/budget — user's monthly budget + current spend
-function getBudgetStats(): { totalSpent: number; budgetAmount: number } {
-  return { totalSpent: 12450, budgetAmount: 10000 };
+function computeDisplayDate(dateStr: string): string {
+  const d = new Date(dateStr);
+  const diffDays = Math.floor((Date.now() - d.getTime()) / 86_400_000);
+  if (diffDays === 0) return "Today";
+  if (diffDays === 1) return "Yesterday";
+  return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
 }
 
-// Replace with: currentMonth from GET /api/analytics/overview
-function getOverviewStats(): OverviewStats["currentMonth"] {
-  return {
-    totalSpent: 12450,
-    totalDrinks: 37,
-    averagePerDrink: 336,
-    topChoices: ["Spanish Latte", "Iced Matcha Latte", "Pour Over"],
-    categoryBreakdown: [
-      { category: "Coffee", count: 20, total: 7200, percentage: 65 },
-      { category: "Matcha", count: 5, total: 2100, percentage: 21 },
-      { category: "Espresso & Milk", count: 12, total: 3150, percentage: 14 },
-    ],
-  };
+// Boundaries for the last 5 ISO weeks (Mon–Sun), oldest first
+function buildWeekSlots(): { start: Date; end: Date }[] {
+  const now = new Date();
+  const day = now.getDay(); // 0=Sun
+  const currentMonStart = new Date(now);
+  currentMonStart.setDate(now.getDate() - (day === 0 ? 6 : day - 1));
+  currentMonStart.setHours(0, 0, 0, 0);
+
+  return Array.from({ length: 5 }, (_, i) => {
+    const start = new Date(currentMonStart);
+    start.setDate(start.getDate() - (4 - i) * 7);
+    const end = new Date(start);
+    end.setDate(end.getDate() + 7);
+    return { start, end };
+  });
 }
 
-// Swap for a real aggregation query (e.g. top cafe by visit count this month)
-function getTopCafe(): { name: string; visits: number; photoUrl: string | null } {
-  return { name: "Yardstick", visits: 8, photoUrl: null };
+interface HomeData {
+  monthlySpent: number;
+  totalDrinksThisMonth: number;
+  categoryBreakdown: { category: BeverageCategory; count: number; total: number; percentage: number }[];
+  mostVisited: { name: string; neighborhood: string; visits: number } | null;
+  weeklyAverage: number;
+  weeklyTrend: [number, number, number, number, number];
+  recentEntries: (IEntry & { displayDate: string })[];
 }
 
-// Replace with: top cafe by visit count from GET /api/analytics/overview
-function getMostVisited(): {
-  name: string;
-  neighborhood: string;
-  visits: number;
-  mapPhotoUrl: string | null;
-} {
-  return {
-    name: "Yardstick",
-    neighborhood: "Makati City",
-    visits: 8,
-    mapPhotoUrl: "https://lh3.googleusercontent.com/aida-public/AB6AXuCDaO9DEjvQ9XZvAsT42ZUKuZ8cqyFBoOblLVt2lsVCvw5b-1T0IJKePJkD0Il9zITvC24Mu6rkg4kixItqEH5CXK5KGGxA5zNfup_Unqz0bY5owjIWEcEVMq5M5IyC29435rQp1xEzhh-8z5tZtWcnTE4_iveQkp2ZsFGv96pPblYW3_eWdPrbYuWIkGtaqoVZ_HXdsGOJHTdoZ6W4EwLSHXiafwydwehEvO_eliBPoCiY1lFA8D7uCsnejJUoAKAevmZtft6vwik",
-  };
-}
+const BUDGET_AMOUNT = 10_000; // TODO: pull from user preferences
 
-// Replace with: totalSpent / weeks_elapsed from GET /api/analytics/overview
-// trend: 5 weekly values normalized 0–1, oldest → newest
-function getWeeklyAverageStats(): {
-  average: number;
-  trend: [number, number, number, number, number];
-} {
-  return { average: 3115, trend: [0.5, 0.75, 1.0, 0.67, 0.5] };
-}
+async function getHomeData(): Promise<HomeData> {
+  const userId = await getServerUserId();
+  if (!userId) {
+    return {
+      monthlySpent: 0,
+      totalDrinksThisMonth: 0,
+      categoryBreakdown: [],
+      mostVisited: null,
+      weeklyAverage: 0,
+      weeklyTrend: [0, 0, 0, 0, 0],
+      recentEntries: [],
+    };
+  }
 
-function getRecentEntries(): (IEntry & { displayDate: string })[] {
-  return [
-    {
-      _id: "static-1",
-      userId: "static",
-      cafeName: "Starbucks",
-      cafeCity: "BGC, Taguig",
-      beverageName: "Matcha Latte",
-      category: "Matcha",
-      date: new Date().toISOString(),
-      displayDate: "Today",
-      basePrice: 175,
-      addOns: [],
-      totalPrice: 175,
-      rating: 5,
-      tastingNotes: [],
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    },
-    {
-      _id: "static-2",
-      userId: "static",
-      cafeName: "Kurasu",
-      cafeCity: "Poblacion, Makati",
-      beverageName: "Toasted Hojicha Flat White",
-      category: "Hojicha",
-      date: new Date(Date.now() - 86400000).toISOString(),
-      displayDate: "Yesterday",
-      basePrice: 106.5,
-      addOns: [],
-      totalPrice: 106.5,
-      rating: 4,
-      tastingNotes: [],
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    },
-    {
-      _id: "static-3",
-      userId: "static",
-      cafeName: "Sightglass",
-      cafeCity: "Salcedo Village, Makati",
-      beverageName: "V60 Pour Over (Ethiopia)",
-      category: "Coffee",
-      date: "2024-09-12T09:00:00.000Z",
-      displayDate: "Sep 12",
-      basePrice: 107.0,
-      addOns: [],
-      totalPrice: 107.0,
-      rating: 4.5,
-      tastingNotes: [],
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    },
-    {
-      _id: "static-4",
-      userId: "static",
-      cafeName: "Tea Atelier",
-      cafeCity: "Quezon City",
-      beverageName: "White Peony Loose Leaf",
-      category: "Fruit & Refresher",
-      date: "2024-09-11T14:30:00.000Z",
-      displayDate: "Sep 11",
-      basePrice: 105.5,
-      addOns: [],
-      totalPrice: 105.5,
-      rating: 4,
-      tastingNotes: [],
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    },
-  ];
+  await connectDB();
+  const userObjectId = new Types.ObjectId(userId);
+
+  const now = new Date();
+  const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+  const weekSlots = buildWeekSlots();
+  const fiveWeeksAgo = weekSlots[0].start;
+
+  // Run all aggregations in parallel
+  const [monthlyAgg, categoryAgg, mostVisitedAgg, weeklyAgg, recent] = await Promise.all([
+    // 1. This month total
+    Entry.aggregate([
+      { $match: { userId: userObjectId, date: { $gte: startOfMonth } } },
+      { $group: { _id: null, totalSpent: { $sum: "$totalPrice" }, count: { $sum: 1 } } },
+    ]),
+
+    // 2. Category breakdown this month
+    Entry.aggregate([
+      { $match: { userId: userObjectId, date: { $gte: startOfMonth } } },
+      { $group: { _id: "$category", count: { $sum: 1 }, total: { $sum: "$totalPrice" } } },
+      { $sort: { count: -1 } },
+    ]),
+
+    // 3. Most visited cafe all-time
+    Entry.aggregate([
+      { $match: { userId: userObjectId } },
+      { $group: { _id: "$cafeId", visits: { $sum: 1 }, cafeName: { $first: "$cafeName" }, cafeCity: { $first: "$cafeCity" } } },
+      { $sort: { visits: -1 } },
+      { $limit: 1 },
+    ]),
+
+    // 4. Weekly spend for last 5 weeks
+    Entry.aggregate([
+      { $match: { userId: userObjectId, date: { $gte: fiveWeeksAgo } } },
+      {
+        $group: {
+          _id: {
+            isoWeek: { $isoWeek: "$date" },
+            isoWeekYear: { $isoWeekYear: "$date" },
+          },
+          total: { $sum: "$totalPrice" },
+        },
+      },
+    ]),
+
+    // 5. Recent entries
+    Entry.find({ userId: userObjectId }).sort({ date: -1 }).limit(3).lean(),
+  ]);
+
+  // Monthly stats
+  const monthlySpent: number = monthlyAgg[0]?.totalSpent ?? 0;
+  const totalDrinksThisMonth: number = monthlyAgg[0]?.count ?? 0;
+
+  // Category breakdown
+  const totalDrinksForPct = categoryAgg.reduce((s: number, r: { count: number }) => s + r.count, 0);
+  const categoryBreakdown = categoryAgg.slice(0, 3).map((r: { _id: BeverageCategory; count: number; total: number }) => ({
+    category: r._id,
+    count: r.count,
+    total: r.total,
+    percentage: totalDrinksForPct > 0 ? Math.round((r.count / totalDrinksForPct) * 100) : 0,
+  }));
+
+  // Most visited
+  const mostVisited = mostVisitedAgg[0]
+    ? { name: mostVisitedAgg[0].cafeName as string, neighborhood: (mostVisitedAgg[0].cafeCity ?? "") as string, visits: mostVisitedAgg[0].visits as number }
+    : null;
+
+  // Weekly trend — map aggregate results to 5 slots
+  const weeklyMap = new Map<string, number>();
+  for (const row of weeklyAgg) {
+    const key = `${row._id.isoWeekYear}-${row._id.isoWeek}`;
+    weeklyMap.set(key, row.total);
+  }
+
+  const slotTotals = weekSlots.map(({ start }) => {
+    const d = new Date(start);
+    // ISO week of this Monday: use the same approach
+    const thursday = new Date(d);
+    thursday.setDate(d.getDate() + 3); // Thursday of that week determines ISO year/week
+    const jan4 = new Date(thursday.getFullYear(), 0, 4);
+    const isoWeek = Math.ceil((((thursday.getTime() - jan4.getTime()) / 86_400_000) + jan4.getDay() + 1) / 7);
+    const isoWeekYear = thursday.getFullYear();
+    return weeklyMap.get(`${isoWeekYear}-${isoWeek}`) ?? 0;
+  });
+
+  const maxSlot = Math.max(...slotTotals, 1);
+  const weeklyTrend = slotTotals.map((v) => v / maxSlot) as [number, number, number, number, number];
+
+  const totalWeeklySpend = slotTotals.reduce((s, v) => s + v, 0);
+  const nonZeroWeeks = slotTotals.filter((v) => v > 0).length;
+  const weeklyAverage = nonZeroWeeks > 0 ? Math.round(totalWeeklySpend / nonZeroWeeks) : 0;
+
+  // Recent entries — serialize ObjectIds/Dates via JSON round-trip
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const recentEntries = (recent as any[]).map((e) => ({
+    ...JSON.parse(JSON.stringify(e)),
+    displayDate: computeDisplayDate(e.date),
+  })) as (IEntry & { displayDate: string })[];
+
+  return { monthlySpent, totalDrinksThisMonth, categoryBreakdown, mostVisited, weeklyAverage, weeklyTrend, recentEntries };
 }
 
 // ---------------------------------------------------------------------------
@@ -175,16 +208,11 @@ function Stars({ rating }: { rating: number }) {
 // Page (Server Component)
 // ---------------------------------------------------------------------------
 
-export default function HomePage() {
-  const budget = getBudgetStats();
-  const stats = getOverviewStats();
-  const topCafe = getTopCafe();
-  const mostVisited = getMostVisited();
-  const weeklyAvg = getWeeklyAverageStats();
-  const entries = getRecentEntries().slice(0, 3);
+export default async function HomePage() {
+  const data = await getHomeData();
 
-  const budgetExceeded = budget.totalSpent > budget.budgetAmount;
-  const budgetPercentRaw = Math.round((budget.totalSpent / budget.budgetAmount) * 100);
+  const budgetExceeded = data.monthlySpent > BUDGET_AMOUNT;
+  const budgetPercentRaw = BUDGET_AMOUNT > 0 ? Math.round((data.monthlySpent / BUDGET_AMOUNT) * 100) : 0;
   const budgetPercent = Math.min(100, budgetPercentRaw);
 
   return (
@@ -248,7 +276,7 @@ export default function HomePage() {
                 Monthly Spend
               </span>
               <h2 className="text-4xl font-extrabold tracking-tight text-on-background">
-                ₱{formatPrice(budget.totalSpent)}
+                ₱{formatPrice(data.monthlySpent)}
               </h2>
             </div>
             <div className="text-right">
@@ -276,27 +304,23 @@ export default function HomePage() {
               <h3 className="text-xs font-bold uppercase tracking-widest text-on-surface-variant mb-2">
                 Most Visited
               </h3>
-              <div className="inline-flex items-center gap-1.5 bg-secondary-container px-3 py-1 rounded-full">
-                <span className="material-symbols-outlined text-xs text-on-secondary-container">
-                  location_on
-                </span>
-                <span className="text-[10px] font-bold uppercase tracking-widest text-on-secondary-container">
-                  {mostVisited.name}
-                </span>
-              </div>
+              {data.mostVisited ? (
+                <div className="inline-flex items-center gap-1.5 bg-secondary-container px-3 py-1 rounded-full">
+                  <span className="material-symbols-outlined text-xs text-on-secondary-container">
+                    location_on
+                  </span>
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-on-secondary-container">
+                    {data.mostVisited.name}
+                  </span>
+                </div>
+              ) : (
+                <span className="text-xs text-on-surface-variant italic">No visits yet</span>
+              )}
             </div>
-            {/* Swap src for mostVisited.mapPhotoUrl when backend provides it */}
-            {mostVisited.mapPhotoUrl && (
-              <div className="absolute inset-0 opacity-10">
-                <img
-                  src={mostVisited.mapPhotoUrl}
-                  alt="Location map"
-                  className="w-full h-full object-cover"
-                />
-              </div>
-            )}
             <p className="relative z-10 text-xs text-on-surface-variant leading-relaxed">
-              {mostVisited.visits} visits this month in {mostVisited.neighborhood}.
+              {data.mostVisited
+                ? `${data.mostVisited.visits} visit${data.mostVisited.visits !== 1 ? "s" : ""}${data.mostVisited.neighborhood ? ` · ${data.mostVisited.neighborhood}` : ""}.`
+                : "Start logging to see your favorite spot."}
             </p>
           </div>
 
@@ -307,16 +331,16 @@ export default function HomePage() {
                 Weekly Average
               </h3>
               <div className="text-2xl font-extrabold tracking-tight text-primary">
-                ₱{formatPrice(weeklyAvg.average)}
+                {data.weeklyAverage > 0 ? `₱${formatPrice(data.weeklyAverage)}` : "—"}
               </div>
             </div>
             {/* trend: 5 weekly values normalized 0–1, oldest → newest */}
             <div className="flex items-end gap-1 h-8">
-              {weeklyAvg.trend.map((v, i) => (
+              {data.weeklyTrend.map((v, i) => (
                 <div
                   key={i}
-                  className={`w-full rounded-sm ${i === 2 ? "bg-primary" : "bg-primary/20"}`}
-                  style={{ height: `${v * 100}%` }}
+                  className={`w-full rounded-sm ${i === 4 ? "bg-primary" : "bg-primary/20"}`}
+                  style={{ height: `${Math.max(v * 100, 4)}%` }}
                 />
               ))}
             </div>
@@ -328,27 +352,30 @@ export default function HomePage() {
               Sensory Palate Overview
             </h3>
 
-            {/* Category bars */}
-            <div className="space-y-3">
-              {stats.categoryBreakdown.map((item) => (
-                <div key={item.category}>
-                  <div className="flex justify-between items-baseline mb-1.5">
-                    <span className="text-[0.625rem] font-bold uppercase tracking-widest text-on-surface-variant">
-                      {item.category}
-                    </span>
-                    <span className="text-[0.625rem] text-on-surface-variant">
-                      {item.percentage}%
-                    </span>
+            {data.categoryBreakdown.length === 0 ? (
+              <p className="text-xs text-on-surface-variant italic">Log your first brew to see your breakdown.</p>
+            ) : (
+              <div className="space-y-3">
+                {data.categoryBreakdown.map((item) => (
+                  <div key={item.category}>
+                    <div className="flex justify-between items-baseline mb-1.5">
+                      <span className="text-[0.625rem] font-bold uppercase tracking-widest text-on-surface-variant">
+                        {item.category}
+                      </span>
+                      <span className="text-[0.625rem] text-on-surface-variant">
+                        {item.percentage}%
+                      </span>
+                    </div>
+                    <div className="h-1 bg-surface-container-high relative">
+                      <div
+                        className="absolute inset-y-0 left-0 bg-primary"
+                        style={{ width: `${item.percentage}%` }}
+                      />
+                    </div>
                   </div>
-                  <div className="h-1 bg-surface-container-high relative">
-                    <div
-                      className="absolute inset-y-0 left-0 bg-primary"
-                      style={{ width: `${item.percentage}%` }}
-                    />
-                  </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
 
@@ -363,40 +390,56 @@ export default function HomePage() {
               View History
             </Link>
           </div>
-          <div className="bg-surface-container-low rounded-xl overflow-hidden">
-            {entries.map((entry, idx) => (
+          {data.recentEntries.length === 0 ? (
+            <div className="bg-surface-container-low rounded-xl p-8 flex flex-col items-center gap-4 text-center">
+              <span className="material-symbols-outlined text-4xl text-on-surface-variant/30">coffee</span>
+              <div>
+                <p className="text-sm font-bold text-on-surface">No entries yet</p>
+                <p className="text-xs text-on-surface-variant mt-1">Start your brew journal by adding your first log.</p>
+              </div>
               <Link
-                key={entry._id}
-                href={`/entry/${entry._id}`}
-                className={`flex flex-col p-5 hover:bg-surface-container-high transition-colors group${idx < entries.length - 1 ? " border-b border-surface-variant/50" : ""}`}
+                href="/entry/new"
+                className="px-5 py-2.5 rounded-xl bg-primary text-on-primary text-xs font-bold hover:bg-primary-dim transition-colors"
               >
-                <div className="flex items-start justify-between mb-3">
-                  <div className="flex items-center gap-4">
-                    <div className="w-10 h-10 flex items-center justify-center rounded-lg bg-surface-container-lowest text-primary group-hover:scale-95 transition-transform">
-                      <span className="material-symbols-outlined text-xl">
-                        {CATEGORY_ICON[entry.category]}
-                      </span>
-                    </div>
-                    <div className="space-y-0.5">
-                      <div className="font-bold text-sm text-on-surface">{entry.beverageName}</div>
-                      <div className="text-xs text-on-surface-variant">
-                        {entry.cafeName}{entry.cafeCity ? ` · ${entry.cafeCity}` : ""}
+                Add First Log
+              </Link>
+            </div>
+          ) : (
+            <div className="bg-surface-container-low rounded-xl overflow-hidden">
+              {data.recentEntries.map((entry, idx) => (
+                <Link
+                  key={entry._id}
+                  href={`/entry/${entry._id}`}
+                  className={`flex flex-col p-5 hover:bg-surface-container-high transition-colors group${idx < data.recentEntries.length - 1 ? " border-b border-surface-variant/50" : ""}`}
+                >
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex items-center gap-4">
+                      <div className="w-10 h-10 flex items-center justify-center rounded-lg bg-surface-container-lowest text-primary group-hover:scale-95 transition-transform">
+                        <span className="material-symbols-outlined text-xl">
+                          {CATEGORY_ICON[entry.category]}
+                        </span>
+                      </div>
+                      <div className="space-y-0.5">
+                        <div className="font-bold text-sm text-on-surface">{entry.beverageName}</div>
+                        <div className="text-xs text-on-surface-variant">
+                          {entry.cafeName}{entry.cafeCity ? ` · ${entry.cafeCity}` : ""}
+                        </div>
                       </div>
                     </div>
+                    <div className="font-bold text-sm text-on-surface">
+                      ₱{formatPrice(entry.totalPrice)}
+                    </div>
                   </div>
-                  <div className="font-bold text-sm text-on-surface">
-                    ₱{formatPrice(entry.totalPrice)}
+                  <div className="flex items-center justify-between pl-14">
+                    <Stars rating={entry.rating} />
+                    <div className="text-[10px] font-medium uppercase tracking-widest text-on-surface-variant opacity-70">
+                      {entry.displayDate}
+                    </div>
                   </div>
-                </div>
-                <div className="flex items-center justify-between pl-14">
-                  <Stars rating={entry.rating} />
-                  <div className="text-[10px] font-medium uppercase tracking-widest text-on-surface-variant opacity-70">
-                    {entry.displayDate}
-                  </div>
-                </div>
-              </Link>
-            ))}
-          </div>
+                </Link>
+              ))}
+            </div>
+          )}
         </section>
 
       </main>

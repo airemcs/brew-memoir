@@ -1,8 +1,12 @@
 import Link from "next/link";
+import { Types } from "mongoose";
 import type { BeverageCategory, ICafeWithStats } from "@/types";
+import { connectDB } from "@/lib/db";
+import { Cafe, Entry } from "@/lib/models";
+import { getServerUserId } from "@/lib/serverAuth";
 
 // ---------------------------------------------------------------------------
-// Data layer — replace with: GET /api/cafes
+// Data layer
 // ---------------------------------------------------------------------------
 
 type CafeEntry = ICafeWithStats & {
@@ -11,129 +15,62 @@ type CafeEntry = ICafeWithStats & {
   lastCategory: BeverageCategory;
 };
 
-function getCafes(): CafeEntry[] {
-  return [
+async function getCafes(): Promise<CafeEntry[]> {
+  const userId = await getServerUserId();
+  if (!userId) return [];
+
+  await connectDB();
+  const userObjectId = new Types.ObjectId(userId);
+
+  // Sort entries by date desc first so $first gives the most recent value
+  const statsAgg = await Entry.aggregate([
+    { $match: { userId: userObjectId } },
+    { $sort: { date: -1 } },
     {
-      _id: "cafe-1",
-      userId: "static",
-      name: "Yardstick Coffee",
-      address: "Salcedo Village, Makati",
-      neighborhood: "Salcedo Village, Makati",
-      tags: [],
-      isFavorite: true,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      lastDrink: "Single Origin Pourover",
-      lastDate: "Oct 26",
-      lastCategory: "Coffee",
-      stats: {
-        totalVisits: 12,
-        totalSpent: 5840,
-        averageRating: 4.6,
-        lastVisited: "2024-10-26T10:00:00.000Z",
+      $group: {
+        _id: "$cafeId",
+        totalVisits: { $sum: 1 },
+        totalSpent: { $sum: "$totalPrice" },
+        averageRating: { $avg: "$rating" },
+        lastVisited: { $first: "$date" },
+        lastDrink: { $first: "$beverageName" },
+        lastCategory: { $first: "$category" },
       },
     },
-    {
-      _id: "cafe-2",
-      userId: "static",
-      name: "Kurasu",
-      address: "Poblacion, Makati",
-      neighborhood: "Poblacion, Makati",
-      tags: [],
-      isFavorite: false,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      lastDrink: "Toasted Hojicha Flat White",
-      lastDate: "Oct 15",
-      lastCategory: "Hojicha",
-      stats: {
-        totalVisits: 6,
-        totalSpent: 4250,
-        averageRating: 4.3,
-        lastVisited: "2024-10-15T14:00:00.000Z",
-      },
-    },
-    {
-      _id: "cafe-3",
-      userId: "static",
-      name: "Sightglass",
-      address: "Legazpi Village, Makati",
-      neighborhood: "Legazpi Village, Makati",
-      tags: [],
-      isFavorite: false,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      lastDrink: "V60 Pour Over (Ethiopia)",
-      lastDate: "Oct 08",
-      lastCategory: "Coffee",
-      stats: {
-        totalVisits: 8,
-        totalSpent: 3960,
-        averageRating: 4.1,
-        lastVisited: "2024-10-08T11:30:00.000Z",
-      },
-    },
-    {
-      _id: "cafe-4",
-      userId: "static",
-      name: "The Curator",
-      address: "Legazpi Village, Makati",
-      neighborhood: "Legazpi Village, Makati",
-      tags: [],
-      isFavorite: true,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      lastDrink: "Peachy Flat White",
-      lastDate: "Sept 30",
-      lastCategory: "Espresso & Milk",
-      stats: {
-        totalVisits: 5,
-        totalSpent: 2450,
-        averageRating: 4.8,
-        lastVisited: "2024-09-30T09:45:00.000Z",
-      },
-    },
-    {
-      _id: "cafe-5",
-      userId: "static",
-      name: "Commune",
-      address: "Kapitolyo, Pasig",
-      neighborhood: "Kapitolyo, Pasig",
-      tags: [],
-      isFavorite: false,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      lastDrink: "Iced Matcha Latte",
-      lastDate: "Sept 22",
-      lastCategory: "Matcha",
-      stats: {
-        totalVisits: 4,
-        totalSpent: 1780,
-        averageRating: 4.0,
-        lastVisited: "2024-09-22T13:00:00.000Z",
-      },
-    },
-    {
-      _id: "cafe-6",
-      userId: "static",
-      name: "Kalsada Coffee",
-      address: "Katipunan, Quezon City",
-      neighborhood: "Katipunan, Quezon City",
-      tags: [],
-      isFavorite: false,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-      lastDrink: "Benguet Drip Coffee",
-      lastDate: "Sept 10",
-      lastCategory: "Coffee",
-      stats: {
-        totalVisits: 3,
-        totalSpent: 1260,
-        averageRating: 4.5,
-        lastVisited: "2024-09-10T09:00:00.000Z",
-      },
-    },
-  ];
+  ]);
+
+  const statsMap = new Map(statsAgg.map((s) => [s._id?.toString(), s]));
+  const cafes = await Cafe.find({ userId: userObjectId }).lean();
+
+  return cafes
+    .map((cafe) => {
+      const s = statsMap.get(cafe._id.toString());
+      return {
+        _id: cafe._id.toString(),
+        userId: cafe.userId.toString(),
+        name: cafe.name,
+        address: cafe.address ?? "",
+        neighborhood: cafe.neighborhood ?? "",
+        tags: cafe.tags,
+        isFavorite: cafe.isFavorite,
+        createdAt: cafe.createdAt.toISOString(),
+        updatedAt: cafe.updatedAt.toISOString(),
+        lastDrink: s?.lastDrink ?? "—",
+        lastDate: s?.lastVisited
+          ? new Date(s.lastVisited).toLocaleDateString("en-US", { month: "short", day: "numeric" })
+          : "—",
+        lastCategory: (s?.lastCategory ?? "Coffee") as BeverageCategory,
+        stats: {
+          totalVisits: s?.totalVisits ?? 0,
+          totalSpent: s?.totalSpent ?? 0,
+          averageRating: s?.averageRating ? Math.round(s.averageRating * 10) / 10 : undefined,
+          lastVisited: s?.lastVisited ? new Date(s.lastVisited).toISOString() : undefined,
+        },
+      } satisfies CafeEntry;
+    })
+    .sort((a, b) =>
+      (b.stats.lastVisited ?? "").localeCompare(a.stats.lastVisited ?? "")
+    );
 }
 
 // ---------------------------------------------------------------------------
@@ -151,10 +88,10 @@ function formatPrice(amount: number): string {
 // Page (Server Component)
 // ---------------------------------------------------------------------------
 
-export default function CafesPage() {
-  const cafes = getCafes();
-  const featured = cafes[0];
-  const spotlight = cafes[3];
+export default async function CafesPage() {
+  const cafes = await getCafes();
+  const featured = cafes[0] ?? null;
+  const spotlight = cafes[3] ?? cafes[1] ?? null;
 
   // Replace with: GET /api/analytics/cafes — portfolio total
   const portfolioTotal = cafes.reduce((sum, c) => sum + c.stats.totalSpent, 0);
@@ -240,68 +177,72 @@ export default function CafesPage() {
         <div className="flex flex-col gap-8">
 
           {/* ── Row 1: Feature Card (full width) ── */}
-          <Link href={`/cafes/${featured._id}`} className="group block">
-            <div className="bg-surface-container-low p-7 rounded-2xl hover:bg-surface-container transition-colors duration-300">
-              <div className="flex justify-between items-start mb-10">
-                <div>
-                  <h3 className="text-2xl font-bold text-on-surface mb-1">{featured.name}</h3>
-                  <p className="text-sm text-on-surface-variant flex items-center gap-1">
-                    <span className="material-symbols-outlined text-sm">location_on</span>
-                    {featured.address}
+          {featured && (
+            <Link href={`/cafes/${featured._id}`} className="group block">
+              <div className="bg-surface-container-low p-7 rounded-2xl hover:bg-surface-container transition-colors duration-300">
+                <div className="flex justify-between items-start mb-10">
+                  <div>
+                    <h3 className="text-2xl font-bold text-on-surface mb-1">{featured.name}</h3>
+                    <p className="text-sm text-on-surface-variant flex items-center gap-1">
+                      <span className="material-symbols-outlined text-sm">location_on</span>
+                      {featured.address}
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <span className="text-3xl font-light text-primary">{featured.stats.totalVisits}</span>
+                    <p className="text-[0.625rem] uppercase tracking-widest text-on-surface-variant">Visits</p>
+                  </div>
+                </div>
+                <div className="border-t border-outline-variant/10 pt-5 flex flex-col gap-1">
+                  <p className="text-[0.625rem] uppercase tracking-widest text-on-surface-variant">Last Ritual</p>
+                  <p className="text-base font-semibold text-on-surface">
+                    {featured.lastDrink}
+                  </p>
+                  <p className="text-sm text-on-surface-variant">
+                    {featured.lastCategory}
+                    <span className="mx-2">·</span>
+                    {featured.lastDate}
                   </p>
                 </div>
-                <div className="text-right">
-                  <span className="text-3xl font-light text-primary">{featured.stats.totalVisits}</span>
-                  <p className="text-[0.625rem] uppercase tracking-widest text-on-surface-variant">Visits</p>
-                </div>
               </div>
-              <div className="border-t border-outline-variant/10 pt-5 flex flex-col gap-1">
-                <p className="text-[0.625rem] uppercase tracking-widest text-on-surface-variant">Last Ritual</p>
-                <p className="text-base font-semibold text-on-surface">
-                  {featured.lastDrink}
-                </p>
-                <p className="text-sm text-on-surface-variant">
-                  {featured.lastCategory}
-                  <span className="mx-2">·</span>
-                  {featured.lastDate}
-                </p>
-              </div>
-            </div>
-          </Link>
+            </Link>
+          )}
 
           {/* ── Row 2: Spotlight (Highlight) ── */}
-          <Link href={`/cafes/${spotlight._id}`} className="group block">
-            <div className="relative overflow-hidden bg-on-background p-10 rounded-2xl">
-              <div className="relative z-10 flex flex-col md:flex-row justify-between items-center gap-8">
-                <div className="text-center md:text-left">
-                  <span className="text-[0.625rem] uppercase tracking-[0.2em] text-outline-variant mb-2 block">
-                    Highlight
-                  </span>
-                  <h3 className="text-3xl font-bold text-background mb-1">{spotlight.name}</h3>
-                  <p className="text-sm text-outline-variant">{spotlight.address}</p>
-                </div>
-                <div className="flex gap-10 text-center">
-                  <div>
-                    <p className="text-3xl font-light text-primary-fixed">{spotlight.stats.totalVisits}</p>
-                    <p className="text-[0.625rem] uppercase tracking-widest text-outline-variant">Visits</p>
+          {spotlight && (
+            <Link href={`/cafes/${spotlight._id}`} className="group block">
+              <div className="relative overflow-hidden bg-on-background p-10 rounded-2xl">
+                <div className="relative z-10 flex flex-col md:flex-row justify-between items-center gap-8">
+                  <div className="text-center md:text-left">
+                    <span className="text-[0.625rem] uppercase tracking-[0.2em] text-outline-variant mb-2 block">
+                      Highlight
+                    </span>
+                    <h3 className="text-3xl font-bold text-background mb-1">{spotlight.name}</h3>
+                    <p className="text-sm text-outline-variant">{spotlight.address}</p>
                   </div>
-                  <div>
-                    <p className="text-3xl font-light text-primary-fixed">₱{formatPrice(spotlight.stats.totalSpent)}</p>
-                    <p className="text-[0.625rem] uppercase tracking-widest text-outline-variant">Total Spent</p>
+                  <div className="flex gap-10 text-center">
+                    <div>
+                      <p className="text-3xl font-light text-primary-fixed">{spotlight.stats.totalVisits}</p>
+                      <p className="text-[0.625rem] uppercase tracking-widest text-outline-variant">Visits</p>
+                    </div>
+                    <div>
+                      <p className="text-3xl font-light text-primary-fixed">₱{formatPrice(spotlight.stats.totalSpent)}</p>
+                      <p className="text-[0.625rem] uppercase tracking-widest text-outline-variant">Total Spent</p>
+                    </div>
+                  </div>
+                  <div className="border-t md:border-t-0 md:border-l border-outline-variant/20 pt-6 md:pt-0 md:pl-8 text-center md:text-left">
+                    <p className="text-[0.625rem] uppercase tracking-widest text-outline-variant mb-2">Most Recent</p>
+                    <p className="text-sm text-background">
+                      {spotlight.lastDrink}
+                      <br />
+                      <span className="text-outline-variant text-xs">{spotlight.lastDate}</span>
+                    </p>
                   </div>
                 </div>
-                <div className="border-t md:border-t-0 md:border-l border-outline-variant/20 pt-6 md:pt-0 md:pl-8 text-center md:text-left">
-                  <p className="text-[0.625rem] uppercase tracking-widest text-outline-variant mb-2">Most Recent</p>
-                  <p className="text-sm text-background">
-                    {spotlight.lastDrink}
-                    <br />
-                    <span className="text-outline-variant text-xs">{spotlight.lastDate}</span>
-                  </p>
-                </div>
+                <div className="absolute inset-0 bg-linear-to-br from-on-background via-[#252826] to-on-background opacity-90" />
               </div>
-              <div className="absolute inset-0 bg-linear-to-br from-on-background via-[#252826] to-on-background opacity-90" />
-            </div>
-          </Link>
+            </Link>
+          )}
 
           {/* ── Row 3: Portfolio Value + Category Breakdown ── */}
           <div className="bg-surface-container-low rounded-2xl p-7 flex flex-col md:flex-row gap-8 md:gap-16">

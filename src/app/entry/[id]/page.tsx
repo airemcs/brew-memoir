@@ -1,187 +1,32 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { Types } from "mongoose";
 import type { BeverageCategory, IEntry } from "@/types";
+import { connectDB } from "@/lib/db";
+import { Entry } from "@/lib/models";
+import { getServerUserId } from "@/lib/serverAuth";
 import DeleteEntryButton from "./DeleteEntryButton";
 
 // ---------------------------------------------------------------------------
-// Data layer — replace with: GET /api/entries/:id
+// Data layer
 // ---------------------------------------------------------------------------
 
-// cafeId links back to /cafes/[id] — replace with real FK from DB
-const STATIC_ENTRIES: (IEntry & { displayDate: string; cafeId?: string })[] = [
-  {
-    _id: "static-1",
-    userId: "static",
-    beverageName: "Matcha Latte",
-    cafeName: "Starbucks",
-    cafeCity: "BGC, Taguig",
-    category: "Matcha",
-    date: new Date().toISOString(),
-    displayDate: "Today, 10:15 AM",
-    basePrice: 175,
-    addOns: [
-      { name: "Oat Milk", category: "alternative", price: 60 },
-      { name: "Extra Shot", category: "intensity", price: 50 },
-      { name: "Vanilla Syrup", category: "syrup", price: 30 },
-    ],
-    totalPrice: 315,
-    rating: 5,
-    tastingNotes: ["Floral", "Creamy", "Vanilla"],
-    personalNotes: "Silky texture with a subtle floral finish. The oat milk really elevated it.",
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  },
-  {
-    _id: "static-2",
-    userId: "static",
-    beverageName: "Toasted Hojicha Flat White",
-    cafeName: "Kurasu",
-    cafeCity: "Poblacion, Makati",
-    cafeId: "cafe-2",
-    category: "Hojicha",
-    date: new Date(Date.now() - 86400000).toISOString(),
-    displayDate: "Yesterday",
-    basePrice: 96.5,
-    addOns: [{ name: "Oat Milk", category: "alternative", price: 10 }],
-    totalPrice: 106.5,
-    rating: 4,
-    tastingNotes: ["Toasty", "Nutty"],
-    personalNotes: "Perfect afternoon pick-me-up. The hojicha was roasted just right.",
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  },
-  {
-    _id: "static-3",
-    userId: "static",
-    beverageName: "V60 Pour Over (Ethiopia)",
-    cafeName: "Sightglass",
-    cafeCity: "Legazpi Village, Makati",
-    cafeId: "cafe-3",
-    category: "Coffee",
-    date: "2024-09-12T09:00:00.000Z",
-    displayDate: "Sep 12",
-    basePrice: 180,
-    addOns: [
-      { name: "Pearls", category: "topping", price: 30 },
-      { name: "Light Ice", category: "temperature", price: 0 },
-    ],
-    totalPrice: 210,
-    rating: 4.5,
-    tastingNotes: ["Fruity", "Bright", "Citrus"],
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  },
-  {
-    _id: "static-4",
-    userId: "static",
-    beverageName: "White Peony Loose Leaf",
-    cafeName: "Tea Atelier",
-    cafeCity: "Quezon City",
-    category: "Fruit & Refresher",
-    date: "2024-09-11T14:30:00.000Z",
-    displayDate: "Sep 11",
-    basePrice: 105.5,
-    addOns: [],
-    totalPrice: 105.5,
-    rating: 4,
-    tastingNotes: [],
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  },
-  {
-    _id: "static-5",
-    userId: "static",
-    beverageName: "Single Origin Pourover",
-    cafeName: "Yardstick Coffee",
-    cafeCity: "Salcedo Village, Makati",
-    cafeId: "cafe-1",
-    category: "Coffee",
-    date: "2024-10-24T09:00:00.000Z",
-    displayDate: "Oct 24",
-    basePrice: 280,
-    addOns: [],
-    totalPrice: 280,
-    rating: 5,
-    tastingNotes: [],
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  },
-  {
-    _id: "static-6",
-    userId: "static",
-    beverageName: "Iced Spanish Latte",
-    cafeName: "Yardstick Coffee",
-    cafeCity: "Salcedo Village, Makati",
-    cafeId: "cafe-1",
-    category: "Espresso & Milk",
-    date: "2024-10-21T10:30:00.000Z",
-    displayDate: "Oct 21",
-    basePrice: 240,
-    addOns: [],
-    totalPrice: 240,
-    rating: 4,
-    tastingNotes: [],
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  },
-  {
-    _id: "static-7",
-    userId: "static",
-    beverageName: "Peachy Flat White",
-    cafeName: "The Curator",
-    cafeCity: "Legazpi Village, Makati",
-    cafeId: "cafe-4",
-    category: "Espresso & Milk",
-    date: "2024-09-30T09:45:00.000Z",
-    displayDate: "Sept 30",
-    basePrice: 290,
-    addOns: [],
-    totalPrice: 290,
-    rating: 4.5,
-    tastingNotes: [],
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  },
-  {
-    _id: "static-8",
-    userId: "static",
-    beverageName: "Iced Matcha Latte",
-    cafeName: "Commune",
-    cafeCity: "Kapitolyo, Pasig",
-    cafeId: "cafe-5",
-    category: "Matcha",
-    date: "2024-09-22T13:00:00.000Z",
-    displayDate: "Sept 22",
-    basePrice: 260,
-    addOns: [],
-    totalPrice: 260,
-    rating: 4,
-    tastingNotes: [],
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  },
-  {
-    _id: "static-9",
-    userId: "static",
-    beverageName: "Benguet Drip Coffee",
-    cafeName: "Kalsada Coffee",
-    cafeCity: "Katipunan, Quezon City",
-    cafeId: "cafe-6",
-    category: "Coffee",
-    date: "2024-09-10T09:00:00.000Z",
-    displayDate: "Sept 10",
-    basePrice: 180,
-    addOns: [],
-    totalPrice: 180,
-    rating: 4.5,
-    tastingNotes: [],
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-  },
-];
+async function getEntry(id: string): Promise<IEntry | null> {
+  if (!Types.ObjectId.isValid(id)) return null;
 
-function getEntry(id: string) {
-  return STATIC_ENTRIES.find((e) => e._id === id) ?? null;
+  const userId = await getServerUserId();
+  if (!userId) return null;
+
+  await connectDB();
+  const entry = await Entry.findOne({
+    _id: new Types.ObjectId(id),
+    userId: new Types.ObjectId(userId),
+  }).lean();
+
+  if (!entry) return null;
+
+  // Serialize: ObjectId → string, Date → ISO string
+  return JSON.parse(JSON.stringify(entry));
 }
 
 // ---------------------------------------------------------------------------
@@ -232,7 +77,7 @@ function Stars({ rating }: { rating: number }) {
 
 export default async function EntryDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const entry = getEntry(id);
+  const entry = await getEntry(id);
   if (!entry) notFound();
 
   return (
