@@ -84,6 +84,7 @@ function formatPrice(amount: number): string {
   });
 }
 
+
 // ---------------------------------------------------------------------------
 // Page (Server Component)
 // ---------------------------------------------------------------------------
@@ -292,7 +293,7 @@ export default async function CafesPage() {
                     </span>
                     <span className="text-xs text-on-surface-variant">{cafe.address}</span>
                     <span className="text-xs text-on-surface-variant italic mt-0.5 truncate">
-                      Last: {cafe.lastDrink} · {cafe.lastDate}
+                      Last: {cafe.lastDrink}
                     </span>
                   </div>
                   <div className="text-right flex flex-col items-end gap-0.5 ml-6 shrink-0">

@@ -19,6 +19,7 @@ interface CafeDetail {
   neighborhood: string;
   totalSpent: number;
   totalVisits: number;
+  averageRating: number | null;
   visitsByDay: [number, number, number, number, number, number, number];
   weeklyAverage: number;
   entries: (IEntry & { displayDate: string })[];
@@ -45,6 +46,7 @@ async function getCafe(id: string): Promise<CafeDetail | null> {
         _id: null,
         totalVisits: { $sum: 1 },
         totalSpent: { $sum: "$totalPrice" },
+        averageRating: { $avg: "$rating" },
         firstVisit: { $min: "$date" },
       },
     },
@@ -52,6 +54,9 @@ async function getCafe(id: string): Promise<CafeDetail | null> {
 
   const totalVisits: number = summary?.totalVisits ?? 0;
   const totalSpent: number = summary?.totalSpent ?? 0;
+  const averageRating: number | null = summary?.averageRating != null
+    ? Math.round(summary.averageRating * 10) / 10
+    : null;
 
   // weeklyAverage — null-safe: returns raw visit count if < 1 week old
   let weeklyAverage = 0;
@@ -96,6 +101,7 @@ async function getCafe(id: string): Promise<CafeDetail | null> {
     neighborhood: cafe.neighborhood ?? cafe.address ?? "",
     totalSpent,
     totalVisits,
+    averageRating,
     visitsByDay,
     weeklyAverage,
     entries,
@@ -201,6 +207,20 @@ export default async function CafeDetailPage({ params }: { params: Promise<{ id:
               {cafe.totalVisits} Visits
             </p>
           </div>
+          {cafe.averageRating !== null && (
+            <div className="col-span-2 bg-surface-container-low p-5 rounded-2xl flex items-center justify-between">
+              <div>
+                <p className="text-[0.625rem] uppercase tracking-wide font-bold text-on-surface-variant mb-2">
+                  Avg. Order Rating
+                </p>
+                <div className="flex items-center gap-2">
+                  <Stars rating={cafe.averageRating} />
+                  <span className="text-sm font-bold text-on-surface">{cafe.averageRating} / 5</span>
+                </div>
+              </div>
+              <span className="text-4xl font-extralight text-primary">{cafe.averageRating}</span>
+            </div>
+          )}
         </section>
 
         {/* Visit Frequency Trend */}
