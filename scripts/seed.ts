@@ -17,6 +17,7 @@ import mongoose, { Types } from "mongoose";
 // Direct model imports (avoid pulling in src/lib/db.ts which reads env at module level)
 import Entry from "../src/lib/models/Entry";
 import Cafe from "../src/lib/models/Cafe";
+import User from "../src/lib/models/User";
 
 // ---------------------------------------------------------------------------
 // Config
@@ -221,8 +222,26 @@ async function seed() {
     console.log("🗑️   Clearing existing seed data for dev user…");
     await Entry.deleteMany({ userId: DEV_USER_ID });
     await Cafe.deleteMany({ userId: DEV_USER_ID });
+    await User.deleteOne({ _id: DEV_USER_ID });
     console.log("✅  Cleared");
   }
+
+  // Upsert dev user so preferences can be persisted
+  console.log("\n👤  Seeding dev user…");
+  await User.findOneAndUpdate(
+    { _id: DEV_USER_ID },
+    {
+      $setOnInsert: {
+        _id: DEV_USER_ID,
+        name: "Airelle M.",
+        email: "dev@brewmemoir.local",
+        authProvider: "credentials",
+        preferences: { monthlyBudget: 10_000, currency: "PHP" },
+      },
+    },
+    { upsert: true, returnDocument: "after" }
+  );
+  console.log("   • dev@brewmemoir.local (id: 000000000000000000000001)");
 
   // Insert cafes (upsert by name to stay idempotent)
   console.log(`\n☕  Seeding ${CAFES.length} cafes…`);

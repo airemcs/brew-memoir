@@ -6,13 +6,12 @@ import { BEVERAGE_CATEGORIES, TASTING_NOTES } from "@/types";
 import type { BeverageCategory } from "@/types";
 
 // ---------------------------------------------------------------------------
-// Static data — replace with: GET /api/user/me or getServerSession(authOptions)
+// Helpers
 // ---------------------------------------------------------------------------
 
-const STATIC_USER = {
-  name: "Airelle M.",
-  memberSince: "March 2024",
-};
+function formatMemberSince(iso: string): string {
+  return new Date(iso).toLocaleDateString("en-US", { month: "long", year: "numeric" });
+}
 
 const CURRENCIES = [
   { code: "PHP", symbol: "₱", label: "Philippine Peso" },
@@ -86,15 +85,44 @@ export default function ProfilePage() {
     return () => { document.documentElement.style.overflow = ""; };
   }, []);
 
-  // Replace with: GET /api/user/preferences
-  const [budget, setBudget] = useState<number>(2000);
+  // User identity
+  const [userName, setUserName] = useState("");
+  const [memberSince, setMemberSince] = useState("");
+
+  // Budget
+  const [budget, setBudget] = useState<number>(10_000);
   const [editingBudget, setEditingBudget] = useState(false);
-  const [budgetDraft, setBudgetDraft] = useState(budget.toString());
+  const [budgetDraft, setBudgetDraft] = useState("");
   const [notificationsOn, setNotificationsOn] = useState(true);
 
   // Currency sheet
   const [currency, setCurrency] = useState(CURRENCIES[0]);
   const [currencyOpen, setCurrencyOpen] = useState(false);
+
+  // Load user info + preferences on mount
+  useEffect(() => {
+    fetch("/api/user/me")
+      .then((r) => r.ok ? r.json() : null)
+      .then((data) => {
+        if (!data) return;
+        setUserName(data.name ?? "");
+        setMemberSince(data.memberSince ? formatMemberSince(data.memberSince) : "");
+      });
+
+    fetch("/api/user/preferences")
+      .then((r) => r.ok ? r.json() : null)
+      .then((data) => {
+        if (!data) return;
+        if (data.monthlyBudget !== undefined) {
+          setBudget(data.monthlyBudget);
+          setBudgetDraft(data.monthlyBudget.toString());
+        }
+        if (data.currency) {
+          const found = CURRENCIES.find((c) => c.code === data.currency);
+          if (found) setCurrency(found);
+        }
+      });
+  }, []);
 
   // Default category sheet
   const [defaultCategory, setDefaultCategory] = useState<BeverageCategory>("Matcha");
@@ -106,9 +134,27 @@ export default function ProfilePage() {
 
   function commitBudget() {
     const parsed = parseFloat(budgetDraft.replace(/,/g, ""));
-    if (!isNaN(parsed) && parsed >= 0) setBudget(parsed);
-    else setBudgetDraft(budget.toString());
+    if (!isNaN(parsed) && parsed > 0) {
+      setBudget(parsed);
+      fetch("/api/user/preferences", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ monthlyBudget: parsed }),
+      });
+    } else {
+      setBudgetDraft(budget.toString());
+    }
     setEditingBudget(false);
+  }
+
+  function selectCurrency(c: typeof CURRENCIES[number]) {
+    setCurrency(c);
+    setCurrencyOpen(false);
+    fetch("/api/user/preferences", {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ currency: c.code }),
+    });
   }
 
   function toggleNote(note: string) {
@@ -159,11 +205,11 @@ export default function ProfilePage() {
         {/* User identity */}
         <section className="pt-6 flex flex-col gap-1">
           <h2 className="text-3xl font-extrabold tracking-[-0.02em] text-on-surface">
-            {STATIC_USER.name}
+            {userName || "—"}
           </h2>
           <p className="text-sm text-on-surface-variant flex items-center gap-1.5">
             <span className="w-1.5 h-1.5 rounded-full bg-primary inline-block" />
-            Taster since {STATIC_USER.memberSince}
+            {memberSince ? `Taster since ${memberSince}` : ""}
           </p>
         </section>
 
@@ -354,7 +400,7 @@ export default function ProfilePage() {
             return (
               <li key={c.code}>
                 <button
-                  onClick={() => { setCurrency(c); setCurrencyOpen(false); }}
+                  onClick={() => selectCurrency(c)}
                   className={`w-full flex items-center justify-between px-4 py-3 rounded-xl transition-colors ${active ? "bg-secondary-container" : "hover:bg-surface-container"}`}
                 >
                   <div className="flex items-center gap-3">

@@ -8,7 +8,9 @@
     "start": "next start",
     "lint": "eslint",
     "seed": "tsx scripts/seed.ts",
-    "seed:clear": "tsx scripts/seed.ts --clear"
+    "seed:clear": "tsx scripts/seed.ts --clear",
+    "wipe": "tsx scripts/wipe.ts",
+    "seed:personal": "tsx scripts/my-seed.ts"
   },
   "dependencies": {
     "@auth/mongodb-adapter": "^3.11.1",

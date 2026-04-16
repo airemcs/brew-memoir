@@ -2,7 +2,7 @@ import Link from "next/link";
 import { Types } from "mongoose";
 import type { BeverageCategory, IEntry } from "@/types";
 import { connectDB } from "@/lib/db";
-import { Entry, Cafe } from "@/lib/models";
+import { Entry, Cafe, User } from "@/lib/models";
 import { getServerUserId } from "@/lib/serverAuth";
 
 // ---------------------------------------------------------------------------
@@ -36,6 +36,7 @@ function buildWeekSlots(): { start: Date; end: Date }[] {
 
 interface HomeData {
   monthlySpent: number;
+  budgetAmount: number;
   totalDrinksThisMonth: number;
   categoryBreakdown: { category: BeverageCategory; count: number; total: number; percentage: number }[];
   mostVisited: { name: string; neighborhood: string; visits: number; mapPhotoUrl: string | null } | null;
@@ -44,13 +45,12 @@ interface HomeData {
   recentEntries: (IEntry & { displayDate: string })[];
 }
 
-const BUDGET_AMOUNT = 10_000; // TODO: pull from user preferences
-
 async function getHomeData(): Promise<HomeData> {
   const userId = await getServerUserId();
   if (!userId) {
     return {
       monthlySpent: 0,
+      budgetAmount: 10_000,
       totalDrinksThisMonth: 0,
       categoryBreakdown: [],
       mostVisited: null as HomeData["mostVisited"],
@@ -69,7 +69,7 @@ async function getHomeData(): Promise<HomeData> {
   const fiveWeeksAgo = weekSlots[0].start;
 
   // Run all aggregations in parallel
-  const [monthlyAgg, categoryAgg, mostVisitedAgg, weeklyAgg, recent] = await Promise.all([
+  const [monthlyAgg, categoryAgg, mostVisitedAgg, weeklyAgg, recent, userDoc] = await Promise.all([
     // 1. This month total
     Entry.aggregate([
       { $match: { userId: userObjectId, date: { $gte: startOfMonth } } },
@@ -83,9 +83,9 @@ async function getHomeData(): Promise<HomeData> {
       { $sort: { count: -1 } },
     ]),
 
-    // 3. Most visited cafe all-time
+    // 3. Most visited cafe this month
     Entry.aggregate([
-      { $match: { userId: userObjectId } },
+      { $match: { userId: userObjectId, date: { $gte: startOfMonth } } },
       { $group: { _id: "$cafeId", visits: { $sum: 1 }, cafeName: { $first: "$cafeName" } } },
       { $sort: { visits: -1 } },
       { $limit: 1 },
@@ -107,11 +107,17 @@ async function getHomeData(): Promise<HomeData> {
 
     // 5. This month's entries
     Entry.find({ userId: userObjectId, date: { $gte: startOfMonth } }).sort({ date: -1 }).lean(),
+
+    // 6. User preferences
+    User.findById(userObjectId).select("preferences").lean(),
   ]);
 
   // Monthly stats
   const monthlySpent: number = monthlyAgg[0]?.totalSpent ?? 0;
   const totalDrinksThisMonth: number = monthlyAgg[0]?.count ?? 0;
+  const budgetAmount: number =
+    (userDoc as { preferences?: { monthlyBudget?: number } } | null)
+      ?.preferences?.monthlyBudget ?? 10_000;
 
   // Category breakdown
   const totalDrinksForPct = categoryAgg.reduce((s: number, r: { count: number }) => s + r.count, 0);
@@ -169,7 +175,7 @@ async function getHomeData(): Promise<HomeData> {
     displayDate: computeDisplayDate(e.date),
   })) as (IEntry & { displayDate: string })[];
 
-  return { monthlySpent, totalDrinksThisMonth, categoryBreakdown, mostVisited, weeklyAverage, weeklyTrend, recentEntries };
+  return { monthlySpent, budgetAmount, totalDrinksThisMonth, categoryBreakdown, mostVisited, weeklyAverage, weeklyTrend, recentEntries };
 }
 
 // ---------------------------------------------------------------------------
@@ -221,8 +227,8 @@ function Stars({ rating }: { rating: number }) {
 export default async function HomePage() {
   const data = await getHomeData();
 
-  const budgetExceeded = data.monthlySpent > BUDGET_AMOUNT;
-  const budgetPercentRaw = BUDGET_AMOUNT > 0 ? Math.round((data.monthlySpent / BUDGET_AMOUNT) * 100) : 0;
+  const budgetExceeded = data.monthlySpent > data.budgetAmount;
+  const budgetPercentRaw = data.budgetAmount > 0 ? Math.round((data.monthlySpent / data.budgetAmount) * 100) : 0;
   const budgetPercent = Math.min(100, budgetPercentRaw);
 
   return (

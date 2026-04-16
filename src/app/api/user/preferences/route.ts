@@ -9,8 +9,13 @@ function isBypassAuth() {
   return process.env.BYPASS_AUTH === "true" && process.env.NODE_ENV !== "production";
 }
 
+const VALID_CURRENCIES = ["PHP", "USD", "SGD", "JPY", "EUR", "GBP"] as const;
+
 const PreferencesSchema = z.object({
-  monthlyBudget: z.number().positive().finite(),
+  monthlyBudget: z.number().positive().finite().optional(),
+  currency: z.enum(VALID_CURRENCIES).optional(),
+}).refine((d) => d.monthlyBudget !== undefined || d.currency !== undefined, {
+  message: "At least one preference field must be provided",
 });
 
 // ---------------------------------------------------------------------------
@@ -19,7 +24,8 @@ const PreferencesSchema = z.object({
 // Returns the authenticated user's preferences.
 //
 // Response:
-//   monthlyBudget — monthly spend target in PHP
+//   monthlyBudget — monthly spend target
+//   currency      — ISO 4217 currency code (e.g. "PHP")
 // ---------------------------------------------------------------------------
 
 export async function GET(_req: NextRequest) {
@@ -38,20 +44,22 @@ export async function GET(_req: NextRequest) {
   await connectDB();
   const user = await User.findById(userId).select("preferences").lean();
 
-  const monthlyBudget =
-    (user as { preferences?: { monthlyBudget?: number } } | null)
-      ?.preferences?.monthlyBudget ?? 10_000;
+  const prefs = (user as { preferences?: { monthlyBudget?: number; currency?: string } } | null)
+    ?.preferences;
 
-  return NextResponse.json({ monthlyBudget });
+  return NextResponse.json({
+    monthlyBudget: prefs?.monthlyBudget ?? 10_000,
+    currency: prefs?.currency ?? "PHP",
+  });
 }
 
 // ---------------------------------------------------------------------------
 // PUT /api/user/preferences
 //
-// Updates the authenticated user's preferences.
+// Updates the authenticated user's preferences (partial update).
 //
-// Body: { monthlyBudget: number }
-// Response: updated preferences
+// Body: { monthlyBudget?: number, currency?: string }
+// Response: full updated preferences
 // ---------------------------------------------------------------------------
 
 export async function PUT(req: NextRequest) {
@@ -76,21 +84,25 @@ export async function PUT(req: NextRequest) {
     );
   }
 
+  const $set: Record<string, unknown> = {};
+  if (parsed.data.monthlyBudget !== undefined)
+    $set["preferences.monthlyBudget"] = parsed.data.monthlyBudget;
+  if (parsed.data.currency !== undefined)
+    $set["preferences.currency"] = parsed.data.currency;
+
   await connectDB();
 
   const updated = await User.findByIdAndUpdate(
     userId,
-    { $set: { "preferences.monthlyBudget": parsed.data.monthlyBudget } },
+    { $set },
     { new: true, upsert: false, select: "preferences" }
   ).lean();
 
-  if (!updated) {
-    return NextResponse.json({ error: "User not found" }, { status: 404 });
-  }
+  const prefs = (updated as { preferences?: { monthlyBudget?: number; currency?: string } } | null)
+    ?.preferences;
 
-  const monthlyBudget =
-    (updated as { preferences?: { monthlyBudget?: number } })
-      ?.preferences?.monthlyBudget ?? parsed.data.monthlyBudget;
-
-  return NextResponse.json({ monthlyBudget });
+  return NextResponse.json({
+    monthlyBudget: prefs?.monthlyBudget ?? parsed.data.monthlyBudget ?? 10_000,
+    currency: prefs?.currency ?? parsed.data.currency ?? "PHP",
+  });
 }
