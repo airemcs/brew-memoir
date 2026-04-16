@@ -31,7 +31,5 @@ export async function middleware(req: NextRequest) {
 }
 
 export const config = {
-  // Temporarily excludes /api/entries during dev testing (no auth yet).
-  // Re-add entries to protection once auth pages are built.
-  matcher: ["/api/((?!auth/|health|entries).*)"],
+  matcher: ["/api/((?!auth/|health).*)"],
 };

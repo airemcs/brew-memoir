@@ -162,7 +162,10 @@ async function getHomeData(): Promise<HomeData> {
   });
 
   const maxSlot = Math.max(...slotTotals, 1);
-  const weeklyTrend = slotTotals.map((v) => v / maxSlot) as [number, number, number, number, number];
+  // Normalize to 0–1; give empty weeks a 0.05 floor so they're visible
+  const weeklyTrend = slotTotals.map((v) =>
+    v > 0 ? v / maxSlot : 0.05
+  ) as [number, number, number, number, number];
 
   const totalWeeklySpend = slotTotals.reduce((s, v) => s + v, 0);
   const nonZeroWeeks = slotTotals.filter((v) => v > 0).length;
@@ -363,7 +366,7 @@ export default async function HomePage() {
               {data.weeklyTrend.map((v, i) => (
                 <div
                   key={i}
-                  className={`w-full rounded-sm ${i === 2 ? "bg-primary" : "bg-primary/20"}`}
+                  className={`w-full rounded-sm ${i === 4 ? "bg-primary" : "bg-primary/20"}`}
                   style={{ height: `${v * 100}%` }}
                 />
               ))}

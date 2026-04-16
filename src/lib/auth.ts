@@ -8,9 +8,6 @@ import clientPromise from "@/lib/mongoClient";
 import { verifyPassword } from "@/lib/utils";
 
 export const authOptions: AuthOptions = {
-  // The MongoDB adapter stores OAuth accounts, sessions, and verification
-  // tokens in the auth-specific collections. Our Mongoose User model handles
-  // the application-level user document in the "users" collection.
   adapter: MongoDBAdapter(clientPromise) as AuthOptions["adapter"],
 
   providers: [
@@ -22,30 +19,17 @@ export const authOptions: AuthOptions = {
     CredentialsProvider({
       name: "Email & Password",
       credentials: {
-        email: { label: "Email", type: "email", placeholder: "you@example.com" },
+        email: { label: "Email", type: "email" },
         password: { label: "Password", type: "password" },
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) return null;
-
         await connectDB();
-
-        // Explicitly select passwordHash (excluded by default via `select: false`)
-        const user = await User.findOne({ email: credentials.email.toLowerCase() }).select(
-          "+passwordHash"
-        );
-
+        const user = await User.findOne({ email: credentials.email.toLowerCase() }).select("+passwordHash");
         if (!user || !user.passwordHash) return null;
-
-        const isValid = await verifyPassword(credentials.password, user.passwordHash);
-        if (!isValid) return null;
-
-        return {
-          id: user._id.toString(),
-          name: user.name,
-          email: user.email,
-          image: user.image,
-        };
+        const valid = await verifyPassword(credentials.password, user.passwordHash);
+        if (!valid) return null;
+        return { id: user._id.toString(), name: user.name, email: user.email, image: user.image };
       },
     }),
   ],
