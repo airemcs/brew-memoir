@@ -220,22 +220,83 @@ export default function NewEntryPage() {
   const [cafeName, setCafeName] = useState("");
   const [cafeCity, setCafeCity] = useState("");
   const [basePrice, setBasePrice] = useState("");
+  const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
   const [personalNotes, setPersonalNotes] = useState("");
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+  const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [submitted, setSubmitted] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
   const photoInputRef = useRef<HTMLInputElement>(null);
 
   function handlePhotoChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
-    const url = URL.createObjectURL(file);
-    setPhotoPreview(url);
+    setPhotoFile(file);
+    setPhotoPreview(URL.createObjectURL(file));
   }
 
   useEffect(() => {
     document.body.style.overflow = showSheet ? "hidden" : "";
     return () => { document.body.style.overflow = ""; };
   }, [showSheet]);
+
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    setSubmitError(null);
+
+    if (!category)          return setSubmitError("Please select a category.");
+    if (!beverageName.trim()) return setSubmitError("Please enter a beverage name.");
+    if (!cafeName.trim())   return setSubmitError("Please enter a cafe name.");
+    if (!basePrice)         return setSubmitError("Please enter a base price.");
+    if (rating === 0)       return setSubmitError("Please give a star rating.");
+
+    setSubmitting(true);
+    try {
+      // 1. Upload photo if one was selected
+      let photoUrl: string | undefined;
+      if (photoFile) {
+        const form = new FormData();
+        form.append("file", photoFile);
+        const uploadRes = await fetch("/api/upload", { method: "POST", body: form });
+        if (!uploadRes.ok) {
+          const err = await uploadRes.json();
+          throw new Error(err.error ?? "Photo upload failed");
+        }
+        ({ photoUrl } = await uploadRes.json());
+      }
+
+      // 2. POST entry
+      const res = await fetch("/api/entries", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          cafeName: cafeName.trim(),
+          cafeCity: cafeCity.trim() || undefined,
+          beverageName: beverageName.trim(),
+          category,
+          date: new Date(date).toISOString(),
+          basePrice: parseFloat(basePrice),
+          addOns,
+          photoUrl,
+          rating,
+          tastingNotes: [],
+          personalNotes: personalNotes.trim() || undefined,
+        }),
+      });
+
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error ?? "Failed to save entry");
+      }
+
+      setSubmitted(true);
+    } catch (err) {
+      setSubmitError(err instanceof Error ? err.message : "Something went wrong");
+    } finally {
+      setSubmitting(false);
+    }
+  }
 
   function handleAddAddon() {
     if (!sheetName.trim()) return;
@@ -425,7 +486,7 @@ export default function NewEntryPage() {
           </p>
         </div>
 
-        <form className="space-y-12" onSubmit={(e) => { e.preventDefault(); setSubmitted(true); }}>
+        <form className="space-y-12" onSubmit={handleSubmit}>
 
           {/* Category */}
           <section>
@@ -473,7 +534,7 @@ export default function NewEntryPage() {
                 <img src={photoPreview} alt="Preview" className="w-full h-full object-cover" />
                 <button
                   type="button"
-                  onClick={() => { setPhotoPreview(null); if (photoInputRef.current) photoInputRef.current.value = ""; }}
+                  onClick={() => { setPhotoPreview(null); setPhotoFile(null); if (photoInputRef.current) photoInputRef.current.value = ""; }}
                   className="absolute top-3 right-3 w-8 h-8 rounded-full bg-inverse-surface/60 backdrop-blur-sm flex items-center justify-center text-inverse-on-surface hover:bg-inverse-surface/80 transition-colors"
                 >
                   <span className="material-symbols-outlined text-base">close</span>
@@ -539,7 +600,8 @@ export default function NewEntryPage() {
                 </label>
                 <input
                   type="date"
-                  defaultValue={new Date().toISOString().split("T")[0]}
+                  value={date}
+                  onChange={(e) => setDate(e.target.value)}
                   className="w-full bg-transparent border-0 border-b border-outline-variant/30 focus:border-primary focus:ring-0 focus:outline-none py-2 px-0 text-base font-medium transition-colors"
                 />
               </div>
@@ -638,12 +700,23 @@ export default function NewEntryPage() {
           </section>
 
           {/* Submit */}
-          <div className="pt-4">
+          <div className="pt-4 flex flex-col gap-3">
+            {submitError && (
+              <p className="text-sm text-error font-medium text-center">{submitError}</p>
+            )}
             <button
               type="submit"
-              className=" w-full py-5 rounded-xl bg-linear-to-br from-primary to-primary-dim text-on-primary font-bold tracking-widest uppercase text-sm shadow-xl active:scale-[0.98] transition-all duration-300"
+              disabled={submitting}
+              className="w-full py-5 rounded-xl bg-linear-to-br from-primary to-primary-dim text-on-primary font-bold tracking-widest uppercase text-sm shadow-xl active:scale-[0.98] transition-all duration-300 disabled:opacity-60 flex items-center justify-center gap-2"
             >
-              Seal the Log Entry
+              {submitting ? (
+                <>
+                  <span className="material-symbols-outlined text-base animate-spin">progress_activity</span>
+                  Saving…
+                </>
+              ) : (
+                "Seal the Log Entry"
+              )}
             </button>
           </div>
 

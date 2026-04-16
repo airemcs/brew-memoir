@@ -20,13 +20,24 @@ import type { BeverageCategory } from "@/types";
 // Response: { entries, total, page, totalPages }
 // ---------------------------------------------------------------------------
 
+// Dev-only placeholder userId — valid ObjectId format, used when BYPASS_AUTH=true.
+const DEV_USER_ID = "000000000000000000000001";
+
+function isBypassAuth() {
+  return process.env.BYPASS_AUTH === "true" && process.env.NODE_ENV !== "production";
+}
+
 export async function GET(req: NextRequest) {
   let userId: string;
   try {
     const session = await getAuthSession();
     userId = session.user.id;
   } catch {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    if (isBypassAuth()) {
+      userId = DEV_USER_ID;
+    } else {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
   }
 
   await connectDB();
@@ -77,7 +88,11 @@ export async function POST(req: NextRequest) {
     const session = await getAuthSession();
     userId = session.user.id;
   } catch {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    if (isBypassAuth()) {
+      userId = DEV_USER_ID;
+    } else {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
   }
 
   const body = await req.json().catch(() => null);
