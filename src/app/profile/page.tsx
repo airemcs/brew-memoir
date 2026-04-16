@@ -47,7 +47,7 @@ function BottomSheet({
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 z-[60] flex flex-col justify-end">
+    <div className="fixed inset-0 z-60 flex flex-col justify-end">
       {/* Scrim */}
       <div
         className="absolute inset-0 bg-black/30 backdrop-blur-sm"
@@ -118,15 +118,33 @@ export default function ProfilePage() {
   return (
     <>
       {/* ── Top App Bar ── */}
-      <header className="fixed top-0 left-0 w-full z-50 bg-surface flex items-center gap-2 px-6 py-4">
-        <Link
-          href="/"
-          className="flex items-center justify-center p-2 rounded-full hover:bg-surface-container transition-colors"
-          aria-label="Back"
+      <header className="fixed top-0 left-0 w-full z-50 bg-surface flex justify-between items-center px-6 py-4">
+        <div className="flex items-center gap-2">
+          <span className="material-symbols-outlined text-primary text-xl">local_cafe</span>
+          <h1 className="text-base font-bold tracking-[-0.02em] text-primary">Brew Memoir</h1>
+        </div>
+
+        <nav className="hidden md:flex gap-6 items-center">
+          <Link href="/" className="text-on-surface-variant text-[10px] uppercase tracking-widest hover:text-primary transition-colors">
+            Journal
+          </Link>
+          <Link href="/cafes" className="text-on-surface-variant text-[10px] uppercase tracking-widest hover:text-primary transition-colors">
+            Cafes
+          </Link>
+          <Link href="/profile/history" className="text-on-surface-variant text-[10px] uppercase tracking-widest hover:text-primary transition-colors">
+            History
+          </Link>
+          <Link href="/profile" className="text-primary text-[10px] uppercase tracking-widest">
+            Profile
+          </Link>
+        </nav>
+
+        <button
+          aria-label="Notifications"
+          className="material-symbols-outlined text-on-surface-variant p-1.5 hover:bg-surface-container rounded-full transition-colors text-xl"
         >
-          <span className="material-symbols-outlined text-primary text-xl">arrow_back</span>
-        </Link>
-        <h1 className="text-base font-bold tracking-[-0.02em] text-primary">Profile</h1>
+          notifications
+        </button>
       </header>
 
       {/* ── Main ── */}
