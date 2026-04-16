@@ -68,9 +68,7 @@ async function getCafes(): Promise<CafeEntry[]> {
         },
       } satisfies CafeEntry;
     })
-    .sort((a, b) =>
-      (b.stats.lastVisited ?? "").localeCompare(a.stats.lastVisited ?? "")
-    );
+    .sort((a, b) => (b.stats.averageRating ?? -1) - (a.stats.averageRating ?? -1));
 }
 
 // ---------------------------------------------------------------------------
