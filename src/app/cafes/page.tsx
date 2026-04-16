@@ -91,8 +91,17 @@ function formatPrice(amount: number): string {
 
 export default async function CafesPage() {
   const cafes = await getCafes();
-  const featured = cafes[0] ?? null;
-  const spotlight = cafes[3] ?? cafes[1] ?? null;
+
+  // Most visited — highest totalVisits
+  const featured = cafes.length > 0
+    ? [...cafes].sort((a, b) => b.stats.totalVisits - a.stats.totalVisits)[0]
+    : null;
+
+  // Best rated — highest averageRating among cafes that have ratings
+  const rated = cafes.filter((c) => c.stats.averageRating !== undefined);
+  const spotlight = rated.length > 0
+    ? [...rated].sort((a, b) => (b.stats.averageRating ?? 0) - (a.stats.averageRating ?? 0))[0]
+    : null;
 
   // Replace with: GET /api/analytics/cafes — portfolio total
   const portfolioTotal = cafes.reduce((sum, c) => sum + c.stats.totalSpent, 0);
