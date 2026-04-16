@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { BeverageCategory, IEntry } from "@/types";
+import DeleteEntryButton from "./DeleteEntryButton";
 
 // ---------------------------------------------------------------------------
 // Data layer — replace with: GET /api/entries/:id
@@ -264,12 +265,7 @@ export default async function EntryDetailPage({ params }: { params: Promise<{ id
           </Link>
         </nav>
 
-        <button
-          aria-label="Share"
-          className="flex items-center justify-center p-2 rounded-full hover:bg-surface-container transition-colors"
-        >
-          <span className="material-symbols-outlined text-primary text-xl">share</span>
-        </button>
+        <DeleteEntryButton entryId={entry._id} />
       </header>
 
       {/* ── Main ── */}
