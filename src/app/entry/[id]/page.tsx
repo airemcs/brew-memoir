@@ -342,7 +342,7 @@ export default async function EntryDetailPage({ params }: { params: Promise<{ id
         </section>
 
         {/* Sommelier Notes */}
-        <section className="px-2">
+        <section>
           <span className="text-[0.75rem] uppercase tracking-widest font-bold text-on-surface-variant">
             Sommelier Notes
           </span>
@@ -360,7 +360,7 @@ export default async function EntryDetailPage({ params }: { params: Promise<{ id
         </section>
 
         {/* Transaction details */}
-        <section className="px-6 py-8 bg-surface-container-low/50 rounded-2xl flex flex-col gap-4">
+        <section className="py-8 bg-surface-container-low/50 rounded-2xl flex flex-col gap-4">
           <div className="flex justify-between items-center text-sm">
             <span className="text-on-surface-variant">Base Price</span>
             <span className="font-medium text-on-surface">₱{formatPrice(entry.basePrice)}</span>

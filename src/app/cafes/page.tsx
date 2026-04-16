@@ -204,7 +204,7 @@ export default function CafesPage() {
       <main className="pt-16 pb-32 px-6 max-w-5xl mx-auto">
 
         {/* Editorial Header */}
-        <section className="pt-8 mb-10">
+        <section className="pt-6 mb-10">
           <span className="text-[0.625rem] uppercase tracking-[0.2em] font-medium text-on-surface-variant block mb-2">
             Curated Collection
           </span>

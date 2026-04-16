@@ -238,10 +238,10 @@ export default function HomePage() {
       </header>
 
       {/* ── Main content ── */}
-      <main className="pt-16 pb-24 px-6 max-w-5xl mx-auto space-y-8">
+      <main className="pt-16 pb-32 px-6 max-w-5xl mx-auto space-y-6">
 
         {/* Monthly Spend Budget */}
-        <section className="space-y-4 pt-4">
+        <section className="space-y-4 pt-6">
           <div className="flex justify-between items-end">
             <div>
               <span className="text-[10px] font-medium uppercase tracking-widest text-on-surface-variant">

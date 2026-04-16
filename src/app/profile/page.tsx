@@ -80,6 +80,12 @@ function BottomSheet({
 // ---------------------------------------------------------------------------
 
 export default function ProfilePage() {
+  // Lock page scroll — content fits the viewport
+  useEffect(() => {
+    document.documentElement.style.overflow = "hidden";
+    return () => { document.documentElement.style.overflow = ""; };
+  }, []);
+
   // Replace with: GET /api/user/preferences
   const [budget, setBudget] = useState<number>(2000);
   const [editingBudget, setEditingBudget] = useState(false);
@@ -148,7 +154,7 @@ export default function ProfilePage() {
       </header>
 
       {/* ── Main ── */}
-      <main className="pt-16 pb-36 px-6 max-w-2xl mx-auto flex flex-col gap-6">
+      <main className="pt-16 pb-16 md:pb-0 px-6 max-w-2xl mx-auto flex flex-col gap-6">
 
         {/* User identity */}
         <section className="pt-6 flex flex-col gap-1">

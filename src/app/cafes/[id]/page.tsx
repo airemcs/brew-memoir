@@ -222,7 +222,7 @@ export default async function CafeDetailPage({ params }: { params: Promise<{ id:
       <main className="pt-16 pb-32 px-6 max-w-2xl mx-auto">
 
         {/* Header */}
-        <section className="pt-8 mb-10">
+        <section className="pt-6 mb-8">
           <h2 className="text-3xl font-extrabold tracking-tight text-on-surface mb-1">{cafe.name}</h2>
           <div className="flex items-center gap-1.5 text-on-surface-variant">
             <span className="material-symbols-outlined text-sm">location_on</span>
@@ -231,7 +231,7 @@ export default async function CafeDetailPage({ params }: { params: Promise<{ id:
         </section>
 
         {/* Metric Cards */}
-        <section className="grid grid-cols-2 gap-4 mb-10">
+        <section className="grid grid-cols-2 gap-4 mb-8">
           <div className="bg-surface-container-low p-5 rounded-2xl">
             <p className="text-[0.625rem] uppercase tracking-[0.1em] font-bold text-on-surface-variant mb-2">
               Total Investment
@@ -251,7 +251,7 @@ export default async function CafeDetailPage({ params }: { params: Promise<{ id:
         </section>
 
         {/* Visit Frequency Trend */}
-        <section className="mb-12">
+        <section className="mb-8">
           <div className="flex justify-between items-end mb-6">
             <div>
               <h3 className="text-[0.625rem] uppercase tracking-[0.1em] font-bold text-on-surface-variant mb-1">
@@ -287,7 +287,7 @@ export default async function CafeDetailPage({ params }: { params: Promise<{ id:
         </section>
 
         {/* Brew History */}
-        <section className="mb-12">
+        <section className="mb-8">
           <div className="flex justify-between items-center mb-6">
             <h3 className="text-[0.625rem] uppercase tracking-[0.1em] font-bold text-on-surface-variant">
               Brew History
@@ -321,7 +321,7 @@ export default async function CafeDetailPage({ params }: { params: Promise<{ id:
         </section>
 
         {/* Location */}
-        <section className="mb-10">
+        <section className="mb-8">
           <h3 className="text-[0.625rem] uppercase tracking-[0.1em] font-bold text-on-surface-variant mb-6">
             Location & Directions
           </h3>

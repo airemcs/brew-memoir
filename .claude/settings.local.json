@@ -2,7 +2,8 @@
   "permissions": {
     "allow": [
       "Bash(npx tsc:*)",
-      "Bash(npm show:*)"
+      "Bash(npm show:*)",
+      "Bash(grep -n \"<main\\\\|<section\\\\|<header\" c:/Users/airelle/Documents/Git/brew-memoir/src/app/page.tsx c:/Users/airelle/Documents/Git/brew-memoir/src/app/cafes/page.tsx c:/Users/airelle/Documents/Git/brew-memoir/src/app/cafes/[id]/page.tsx c:/Users/airelle/Documents/Git/brew-memoir/src/app/entry/[id]/page.tsx c:/Users/airelle/Documents/Git/brew-memoir/src/app/profile/page.tsx c:/Users/airelle/Documents/Git/brew-memoir/src/app/profile/history/page.tsx)"
     ]
   }
 }
