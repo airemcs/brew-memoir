@@ -1,0 +1,123 @@
+import { NextRequest, NextResponse } from "next/server";
+import { Types } from "mongoose";
+import { getAuthSession } from "@/lib/session";
+import { connectDB } from "@/lib/db";
+import { Entry, Cafe } from "@/lib/models";
+import { CreateEntrySchema, validate } from "@/lib/validation";
+import { BEVERAGE_CATEGORIES } from "@/types";
+import type { BeverageCategory } from "@/types";
+
+// ---------------------------------------------------------------------------
+// GET /api/entries
+//
+// Returns a paginated list of entries for the authenticated user.
+//
+// Query params:
+//   page     — 1-based page number (default: 1)
+//   limit    — items per page (default: 20, max: 100)
+//   category — filter by BeverageCategory (optional)
+//
+// Response: { entries, total, page, totalPages }
+// ---------------------------------------------------------------------------
+
+export async function GET(req: NextRequest) {
+  let userId: string;
+  try {
+    const session = await getAuthSession();
+    userId = session.user.id;
+  } catch {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  await connectDB();
+
+  const { searchParams } = req.nextUrl;
+  const page = Math.max(1, parseInt(searchParams.get("page") ?? "1", 10));
+  const limit = Math.min(100, Math.max(1, parseInt(searchParams.get("limit") ?? "20", 10)));
+  const category = searchParams.get("category");
+
+  const filter: Record<string, unknown> = { userId: new Types.ObjectId(userId) };
+
+  if (category && (BEVERAGE_CATEGORIES as readonly string[]).includes(category)) {
+    filter.category = category as BeverageCategory;
+  }
+
+  const [entries, total] = await Promise.all([
+    Entry.find(filter)
+      .sort({ date: -1 })
+      .skip((page - 1) * limit)
+      .limit(limit)
+      .lean(),
+    Entry.countDocuments(filter),
+  ]);
+
+  return NextResponse.json({
+    entries,
+    total,
+    page,
+    totalPages: Math.ceil(total / limit),
+  });
+}
+
+// ---------------------------------------------------------------------------
+// POST /api/entries
+//
+// Creates a new entry for the authenticated user.
+// - Validates the body with Zod (CreateEntrySchema)
+// - Recomputes totalPrice server-side from basePrice + sum(addOns.price)
+// - Upserts a Cafe document by (userId + cafeName) so the Cafes directory
+//   is always in sync — no separate API call needed from the client
+//
+// Response: the created entry document (201)
+// ---------------------------------------------------------------------------
+
+export async function POST(req: NextRequest) {
+  let userId: string;
+  try {
+    const session = await getAuthSession();
+    userId = session.user.id;
+  } catch {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  const body = await req.json().catch(() => null);
+  const parsed = validate(CreateEntrySchema, body);
+  if ("error" in parsed) {
+    return NextResponse.json({ error: parsed.error }, { status: 400 });
+  }
+
+  const { data } = parsed;
+  await connectDB();
+
+  // Recompute totalPrice on the server — never trust the client's value
+  const totalPrice = data.basePrice + data.addOns.reduce((sum, a) => sum + a.price, 0);
+
+  const userObjectId = new Types.ObjectId(userId);
+
+  // Upsert Cafe: ensures a record exists for every unique cafeName per user.
+  // findOneAndUpdate with upsert avoids a race condition vs. findOne + create.
+  const cafe = await Cafe.findOneAndUpdate(
+    { userId: userObjectId, name: data.cafeName },
+    {
+      $setOnInsert: {
+        userId: userObjectId,
+        name: data.cafeName,
+        address: data.cafeCity,
+        neighborhood: data.cafeCity,
+        tags: [],
+        isFavorite: false,
+      },
+    },
+    { upsert: true, new: true }
+  );
+
+  const entry = await Entry.create({
+    ...data,
+    userId: userObjectId,
+    cafeId: cafe._id,
+    totalPrice,
+    date: new Date(data.date),
+  });
+
+  return NextResponse.json(entry, { status: 201 });
+}
