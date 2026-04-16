@@ -2,7 +2,7 @@ import Link from "next/link";
 import { Types } from "mongoose";
 import type { BeverageCategory, IEntry } from "@/types";
 import { connectDB } from "@/lib/db";
-import { Entry } from "@/lib/models";
+import { Entry, Cafe } from "@/lib/models";
 import { getServerUserId } from "@/lib/serverAuth";
 
 // ---------------------------------------------------------------------------
@@ -38,7 +38,7 @@ interface HomeData {
   monthlySpent: number;
   totalDrinksThisMonth: number;
   categoryBreakdown: { category: BeverageCategory; count: number; total: number; percentage: number }[];
-  mostVisited: { name: string; neighborhood: string; visits: number } | null;
+  mostVisited: { name: string; neighborhood: string; visits: number; mapPhotoUrl: string | null } | null;
   weeklyAverage: number;
   weeklyTrend: [number, number, number, number, number];
   recentEntries: (IEntry & { displayDate: string })[];
@@ -53,7 +53,7 @@ async function getHomeData(): Promise<HomeData> {
       monthlySpent: 0,
       totalDrinksThisMonth: 0,
       categoryBreakdown: [],
-      mostVisited: null,
+      mostVisited: null as HomeData["mostVisited"],
       weeklyAverage: 0,
       weeklyTrend: [0, 0, 0, 0, 0],
       recentEntries: [],
@@ -86,7 +86,7 @@ async function getHomeData(): Promise<HomeData> {
     // 3. Most visited cafe all-time
     Entry.aggregate([
       { $match: { userId: userObjectId } },
-      { $group: { _id: "$cafeId", visits: { $sum: 1 }, cafeName: { $first: "$cafeName" }, cafeCity: { $first: "$cafeCity" } } },
+      { $group: { _id: "$cafeId", visits: { $sum: 1 }, cafeName: { $first: "$cafeName" } } },
       { $sort: { visits: -1 } },
       { $limit: 1 },
     ]),
@@ -105,8 +105,8 @@ async function getHomeData(): Promise<HomeData> {
       },
     ]),
 
-    // 5. Recent entries
-    Entry.find({ userId: userObjectId }).sort({ date: -1 }).limit(3).lean(),
+    // 5. This month's entries
+    Entry.find({ userId: userObjectId, date: { $gte: startOfMonth } }).sort({ date: -1 }).lean(),
   ]);
 
   // Monthly stats
@@ -122,10 +122,20 @@ async function getHomeData(): Promise<HomeData> {
     percentage: totalDrinksForPct > 0 ? Math.round((r.count / totalDrinksForPct) * 100) : 0,
   }));
 
-  // Most visited
-  const mostVisited = mostVisitedAgg[0]
-    ? { name: mostVisitedAgg[0].cafeName as string, neighborhood: (mostVisitedAgg[0].cafeCity ?? "") as string, visits: mostVisitedAgg[0].visits as number }
-    : null;
+  // Most visited — look up the Cafe document directly for its canonical address
+  const MOST_VISITED_TINT = "https://lh3.googleusercontent.com/aida-public/AB6AXuCDaO9DEjvQ9XZvAsT42ZUKuZ8cqyFBoOblLVt2lsVCvw5b-1T0IJKePJkD0Il9zITvC24Mu6rkg4kixItqEH5CXK5KGGxA5zNfup_Unqz0bY5owjIWEcEVMq5M5IyC29435rQp1xEzhh-8z5tZtWcnTE4_iveQkp2ZsFGv96pPblYW3_eWdPrbYuWIkGtaqoVZ_HXdsGOJHTdoZ6W4EwLSHXiafwydwehEvO_eliBPoCiY1lFA8D7uCsnejJUoAKAevmZtft6vwik";
+  let mostVisited: HomeData["mostVisited"] = null;
+  if (mostVisitedAgg[0]) {
+    const cafeDoc = mostVisitedAgg[0]._id
+      ? await Cafe.findById(mostVisitedAgg[0]._id).lean()
+      : null;
+    mostVisited = {
+      name: mostVisitedAgg[0].cafeName as string,
+      neighborhood: (cafeDoc?.address ?? cafeDoc?.neighborhood ?? "") as string,
+      visits: mostVisitedAgg[0].visits as number,
+      mapPhotoUrl: MOST_VISITED_TINT,
+    };
+  }
 
   // Weekly trend — map aggregate results to 5 slots
   const weeklyMap = new Map<string, number>();
@@ -300,26 +310,34 @@ export default async function HomePage() {
         <div className="grid grid-cols-2 gap-4">
           {/* Most Visited */}
           <div className="bg-surface-container-low rounded-xl p-5 flex flex-col justify-between aspect-square relative overflow-hidden">
+            {/* Always-on tint — replaced by a real mapPhotoUrl once backend provides it */}
+            {data.mostVisited?.mapPhotoUrl ? (
+              <div className="absolute inset-0 opacity-10">
+                <img
+                  src={data.mostVisited.mapPhotoUrl}
+                  alt="Location map"
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            ) : (
+              <div className="absolute inset-0 bg-linear-to-br from-secondary/15 via-transparent to-primary/10 pointer-events-none" />
+            )}
             <div className="relative z-10">
               <h3 className="text-xs font-bold uppercase tracking-widest text-on-surface-variant mb-2">
                 Most Visited
               </h3>
-              {data.mostVisited ? (
-                <div className="inline-flex items-center gap-1.5 bg-secondary-container px-3 py-1 rounded-full">
-                  <span className="material-symbols-outlined text-xs text-on-secondary-container">
-                    location_on
-                  </span>
-                  <span className="text-[10px] font-bold uppercase tracking-widest text-on-secondary-container">
-                    {data.mostVisited.name}
-                  </span>
-                </div>
-              ) : (
-                <span className="text-xs text-on-surface-variant italic">No visits yet</span>
-              )}
+              <div className="inline-flex items-center gap-1.5 bg-secondary-container px-3 py-1 rounded-full max-w-full">
+                <span className="material-symbols-outlined text-xs text-on-secondary-container shrink-0">
+                  location_on
+                </span>
+                <span className="text-[10px] font-bold uppercase tracking-widest text-on-secondary-container truncate">
+                  {data.mostVisited?.name ?? "—"}
+                </span>
+              </div>
             </div>
             <p className="relative z-10 text-xs text-on-surface-variant leading-relaxed">
               {data.mostVisited
-                ? `${data.mostVisited.visits} visit${data.mostVisited.visits !== 1 ? "s" : ""}${data.mostVisited.neighborhood ? ` · ${data.mostVisited.neighborhood}` : ""}.`
+                ? `${data.mostVisited.visits} visits this month in ${data.mostVisited.neighborhood}.`
                 : "Start logging to see your favorite spot."}
             </p>
           </div>
@@ -331,7 +349,7 @@ export default async function HomePage() {
                 Weekly Average
               </h3>
               <div className="text-2xl font-extrabold tracking-tight text-primary">
-                {data.weeklyAverage > 0 ? `₱${formatPrice(data.weeklyAverage)}` : "—"}
+                ₱{formatPrice(data.weeklyAverage)}
               </div>
             </div>
             {/* trend: 5 weekly values normalized 0–1, oldest → newest */}
@@ -339,8 +357,8 @@ export default async function HomePage() {
               {data.weeklyTrend.map((v, i) => (
                 <div
                   key={i}
-                  className={`w-full rounded-sm ${i === 4 ? "bg-primary" : "bg-primary/20"}`}
-                  style={{ height: `${Math.max(v * 100, 4)}%` }}
+                  className={`w-full rounded-sm ${i === 2 ? "bg-primary" : "bg-primary/20"}`}
+                  style={{ height: `${v * 100}%` }}
                 />
               ))}
             </div>
@@ -379,10 +397,10 @@ export default async function HomePage() {
           </div>
         </div>
 
-        {/* Recent Logs */}
+        {/* This Month's Logs */}
         <section className="space-y-4">
           <div className="flex items-center justify-between">
-            <h3 className="text-lg font-bold tracking-tight">Recent Logs</h3>
+            <h3 className="text-lg font-bold tracking-tight">This Month</h3>
             <Link
               href="/profile/history"
               className="text-primary text-[10px] font-bold uppercase tracking-widest hover:opacity-80 transition-opacity"
@@ -394,8 +412,8 @@ export default async function HomePage() {
             <div className="bg-surface-container-low rounded-xl p-8 flex flex-col items-center gap-4 text-center">
               <span className="material-symbols-outlined text-4xl text-on-surface-variant/30">coffee</span>
               <div>
-                <p className="text-sm font-bold text-on-surface">No entries yet</p>
-                <p className="text-xs text-on-surface-variant mt-1">Start your brew journal by adding your first log.</p>
+                <p className="text-sm font-bold text-on-surface">Nothing logged this month</p>
+                <p className="text-xs text-on-surface-variant mt-1">Add your first brew of the month to get started.</p>
               </div>
               <Link
                 href="/entry/new"

@@ -44,11 +44,6 @@ const ADDON_CATEGORY_ICON: Record<AddOnCategory, string> = {
   customization: "tune",
 };
 
-// Initial add-ons shown before the user adds more
-const INITIAL_ADDONS: AddOn[] = [
-  { name: "Oat Milk",    category: "alternative", price: 60 },
-  { name: "Extra Shot",  category: "intensity",   price: 50 },
-];
 
 // ---------------------------------------------------------------------------
 // Sub-components
@@ -190,19 +185,6 @@ function AutocompleteInput({
   );
 }
 
-const SEED_CAFES = [
-  "Yardstick Coffee", "Kurasu", "Sightglass", "Kalye Brew", "The Curator",
-  "Commune", "Habitual Coffee", "Early Bird Breakfast Club", "Brewed Awakening",
-  "Cartimar Coffee", "Kalsada Coffee", "Toby's Estate", "Tim Hortons",
-];
-const SEED_CITIES = [
-  "BGC, Taguig", "Poblacion, Makati", "Salcedo Village, Makati",
-  "Legazpi Village, Makati", "Greenbelt, Makati", "Rockwell, Makati",
-  "San Juan, Metro Manila", "Kapitolyo, Pasig", "Ortigas, Pasig",
-  "Eastwood, Quezon City", "Katipunan, Quezon City", "Maginhawa, Quezon City",
-  "Timog, Quezon City", "Cubao, Quezon City", "Alabang, Muntinlupa",
-  "Intramuros, Manila", "Ermita, Manila", "Malate, Manila",
-];
 
 // ---------------------------------------------------------------------------
 // Page
@@ -211,7 +193,9 @@ const SEED_CITIES = [
 export default function NewEntryPage() {
   const [category, setCategory] = useState<BeverageCategory | null>(null);
   const [rating, setRating] = useState(0);
-  const [addOns, setAddOns] = useState<AddOn[]>(INITIAL_ADDONS);
+  const [addOns, setAddOns] = useState<AddOn[]>([]);
+  const [seedCafes, setSeedCafes] = useState<string[]>([]);
+  const [seedCities, setSeedCities] = useState<string[]>([]);
   const [showSheet, setShowSheet] = useState(false);
   const [sheetCategory, setSheetCategory] = useState<AddOnCategory>("alternative");
   const [sheetName, setSheetName] = useState("");
@@ -235,6 +219,18 @@ export default function NewEntryPage() {
     setPhotoFile(file);
     setPhotoPreview(URL.createObjectURL(file));
   }
+
+  useEffect(() => {
+    fetch("/api/cafes")
+      .then((r) => r.json())
+      .then((data: { name: string; address?: string }[]) => {
+        setSeedCafes(data.map((c) => c.name));
+        setSeedCities(
+          Array.from(new Set(data.map((c) => c.address ?? "").filter(Boolean)))
+        );
+      })
+      .catch(() => {});
+  }, []);
 
   useEffect(() => {
     document.body.style.overflow = showSheet ? "hidden" : "";
@@ -574,7 +570,7 @@ export default function NewEntryPage() {
               <AutocompleteInput
                 value={cafeName}
                 onChange={setCafeName}
-                seeds={SEED_CAFES}
+                seeds={seedCafes}
                 lsKey="brew-memoir:cafes"
                 placeholder="Yardstick Coffee"
               />
@@ -587,7 +583,7 @@ export default function NewEntryPage() {
               <AutocompleteInput
                 value={cafeCity}
                 onChange={setCafeCity}
-                seeds={SEED_CITIES}
+                seeds={seedCities}
                 lsKey="brew-memoir:cities"
                 placeholder="Makati, Metro Manila"
               />

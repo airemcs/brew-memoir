@@ -1,4 +1,4 @@
-import mongoose, { Schema, model, models, type Document } from "mongoose";
+import { Schema, model, models, type Document } from "mongoose";
 import type { AuthProvider } from "@/types";
 
 export interface IUserDocument extends Document {
@@ -8,6 +8,9 @@ export interface IUserDocument extends Document {
   authProvider: AuthProvider;
   // Only set for credentials-provider accounts; never exposed to the client.
   passwordHash?: string;
+  preferences: {
+    monthlyBudget: number; // in PHP, default 10000
+  };
   createdAt: Date;
   updatedAt: Date;
 }
@@ -23,6 +26,9 @@ const UserSchema = new Schema<IUserDocument>(
       required: true,
     },
     passwordHash: { type: String, select: false }, // excluded from queries by default
+    preferences: {
+      monthlyBudget: { type: Number, default: 10_000 },
+    },
   },
   { timestamps: true }
 );
