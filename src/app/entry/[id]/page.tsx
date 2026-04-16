@@ -304,7 +304,7 @@ export default async function EntryDetailPage({ params }: { params: Promise<{ id
           {/* Location */}
           <div className="p-6 bg-surface-container-low rounded-xl flex flex-col justify-between">
             <div>
-              <span className="text-[0.75rem] uppercase tracking-[0.1em] font-bold text-on-surface-variant">
+              <span className="text-[0.75rem] uppercase tracking-widest font-bold text-on-surface-variant">
                 The Venue
               </span>
               {entry.cafeId ? (
@@ -327,7 +327,7 @@ export default async function EntryDetailPage({ params }: { params: Promise<{ id
             <hr className="border-outline-variant/20 my-4" />
 
             <div>
-              <span className="text-[0.75rem] uppercase tracking-[0.1em] font-bold text-on-surface-variant">
+              <span className="text-[0.75rem] uppercase tracking-widest font-bold text-on-surface-variant">
                 Journaled On
               </span>
               <h3 className="text-base font-bold text-on-surface mt-1">
@@ -343,7 +343,7 @@ export default async function EntryDetailPage({ params }: { params: Promise<{ id
 
         {/* Sommelier Notes */}
         <section className="px-2">
-          <span className="text-[0.75rem] uppercase tracking-[0.1em] font-bold text-on-surface-variant">
+          <span className="text-[0.75rem] uppercase tracking-widest font-bold text-on-surface-variant">
             Sommelier Notes
           </span>
           <div className="mt-4 border-l-2 border-primary/10 pl-6 py-2">
