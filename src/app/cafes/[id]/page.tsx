@@ -233,7 +233,7 @@ export default async function CafeDetailPage({ params }: { params: Promise<{ id:
         {/* Metric Cards */}
         <section className="grid grid-cols-2 gap-4 mb-8">
           <div className="bg-surface-container-low p-5 rounded-2xl">
-            <p className="text-[0.625rem] uppercase tracking-[0.1em] font-bold text-on-surface-variant mb-2">
+            <p className="text-[0.625rem] uppercase tracking-wide font-bold text-on-surface-variant mb-2">
               Total Investment
             </p>
             <p className="text-2xl font-extrabold tracking-tight text-primary">
@@ -241,7 +241,7 @@ export default async function CafeDetailPage({ params }: { params: Promise<{ id:
             </p>
           </div>
           <div className="bg-surface-container-low p-5 rounded-2xl">
-            <p className="text-[0.625rem] uppercase tracking-[0.1em] font-bold text-on-surface-variant mb-2">
+            <p className="text-[0.625rem] uppercase tracking-wide font-bold text-on-surface-variant mb-2">
               Total Visits
             </p>
             <p className="text-2xl font-extrabold tracking-tight text-primary">
@@ -254,7 +254,7 @@ export default async function CafeDetailPage({ params }: { params: Promise<{ id:
         <section className="mb-8">
           <div className="flex justify-between items-end mb-6">
             <div>
-              <h3 className="text-[0.625rem] uppercase tracking-[0.1em] font-bold text-on-surface-variant mb-1">
+              <h3 className="text-[0.625rem] uppercase tracking-wide font-bold text-on-surface-variant mb-1">
                 Visit Frequency Trend
               </h3>
               <p className="text-sm text-on-surface-variant">Patterns across the week</p>
@@ -289,7 +289,7 @@ export default async function CafeDetailPage({ params }: { params: Promise<{ id:
         {/* Brew History */}
         <section className="mb-8">
           <div className="flex justify-between items-center mb-6">
-            <h3 className="text-[0.625rem] uppercase tracking-[0.1em] font-bold text-on-surface-variant">
+            <h3 className="text-[0.625rem] uppercase tracking-wide font-bold text-on-surface-variant">
               Brew History
             </h3>
             <Link href="/profile/history" className="text-[0.625rem] font-bold text-primary">
@@ -322,7 +322,7 @@ export default async function CafeDetailPage({ params }: { params: Promise<{ id:
 
         {/* Location */}
         <section className="mb-8">
-          <h3 className="text-[0.625rem] uppercase tracking-[0.1em] font-bold text-on-surface-variant mb-6">
+          <h3 className="text-[0.625rem] uppercase tracking-wide font-bold text-on-surface-variant mb-6">
             Location & Directions
           </h3>
           <div className="bg-surface-container-low rounded-2xl overflow-hidden">
