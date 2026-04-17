@@ -137,7 +137,7 @@ async function getHomeData(): Promise<HomeData> {
       : null;
     mostVisited = {
       name: mostVisitedAgg[0].cafeName as string,
-      neighborhood: (cafeDoc?.address ?? cafeDoc?.neighborhood ?? "") as string,
+      neighborhood: ((cafeDoc?.address ?? cafeDoc?.neighborhood ?? "") as string).split(",")[0].trim(),
       visits: mostVisitedAgg[0].visits as number,
       mapPhotoUrl: MOST_VISITED_TINT,
     };
@@ -337,7 +337,7 @@ export default async function HomePage() {
               <h3 className="text-xs font-bold uppercase tracking-widest text-on-surface-variant mb-2">
                 Most Visited
               </h3>
-              <div className="inline-flex items-center gap-1.5 bg-secondary-container px-3 py-1 rounded-full max-w-full">
+              <div className="inline-flex items-center gap-1.5 bg-secondary-container pl-1.5 pr-2 py-1 rounded-full max-w-full">
                 <span className="material-symbols-outlined text-xs text-on-secondary-container shrink-0">
                   location_on
                 </span>
@@ -348,7 +348,7 @@ export default async function HomePage() {
             </div>
             <p className="relative z-10 text-xs text-on-surface-variant leading-relaxed">
               {data.mostVisited
-                ? `${data.mostVisited.visits} visits this month in ${data.mostVisited.neighborhood}.`
+                ? `${data.mostVisited.visits} visits this month in ${data.mostVisited.neighborhood}`
                 : "Start logging to see your favorite spot."}
             </p>
           </div>

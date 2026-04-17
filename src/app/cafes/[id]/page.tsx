@@ -58,12 +58,23 @@ async function getCafe(id: string): Promise<CafeDetail | null> {
     ? Math.round(summary.averageRating * 10) / 10
     : null;
 
-  // weeklyAverage — null-safe: returns raw visit count if < 1 week old
-  let weeklyAverage = 0;
-  if (summary?.firstVisit) {
-    const weeks = (Date.now() - new Date(summary.firstVisit).getTime()) / (7 * 24 * 60 * 60 * 1000);
-    weeklyAverage = weeks >= 1 ? Math.round((totalVisits / weeks) * 10) / 10 : totalVisits;
-  }
+  // weeklyAverage — distinct ISO weeks with at least one visit, then visits / weeks
+  const weekAgg = await Entry.aggregate([
+    { $match: { userId: userObjectId, cafeId: cafeObjectId } },
+    {
+      $group: {
+        _id: {
+          isoWeek: { $isoWeek: "$date" },
+          isoWeekYear: { $isoWeekYear: "$date" },
+        },
+      },
+    },
+    { $count: "distinctWeeks" },
+  ]);
+  const distinctWeeks: number = weekAgg[0]?.distinctWeeks ?? 0;
+  const weeklyAverage = distinctWeeks > 0
+    ? Math.round((totalVisits / distinctWeeks) * 10) / 10
+    : 0;
 
   // visitsByDay[7] (0=Mon … 6=Sun)
   // $dayOfWeek: 1=Sun … 7=Sat → remap: Sun→6, Mon→0, …, Sat→5
