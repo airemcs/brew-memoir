@@ -70,37 +70,65 @@ function Stars({ rating }: { rating: number }) {
 // Page
 // ---------------------------------------------------------------------------
 
+const PAGE_SIZE = 20;
+
 type EntryWithDisplay = IEntry & { displayDate: string };
+
+function toDisplay(e: IEntry): EntryWithDisplay {
+  return { ...e, displayDate: computeDisplayDate(e.date) };
+}
 
 export default function HistoryPage() {
   const [allEntries, setAllEntries] = useState<EntryWithDisplay[]>([]);
+  const [total, setTotal] = useState(0);
+  const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [search, setSearch] = useState("");
   const [activeCategory, setActiveCategory] = useState<BeverageCategory | "All">("All");
 
-  useEffect(() => {
-    fetch("/api/entries?limit=100")
+  async function fetchPage(pageNum: number, category: BeverageCategory | "All", append: boolean) {
+    const catParam = category !== "All" ? `&category=${encodeURIComponent(category)}` : "";
+    const data = await fetch(`/api/entries?page=${pageNum}&limit=${PAGE_SIZE}${catParam}`)
       .then((r) => r.json())
-      .then((data) => {
-        const entries: EntryWithDisplay[] = (data.entries ?? []).map((e: IEntry) => ({
-          ...e,
-          displayDate: computeDisplayDate(e.date),
-        }));
-        setAllEntries(entries);
-      })
-      .catch(console.error)
-      .finally(() => setLoading(false));
+      .catch(() => ({ entries: [], total: 0 }));
+
+    const entries = (data.entries ?? []).map(toDisplay);
+    setAllEntries((prev) => append ? [...prev, ...entries] : entries);
+    setTotal(data.total ?? 0);
+    setPage(pageNum);
+  }
+
+  // Initial load
+  useEffect(() => {
+    setLoading(true);
+    fetchPage(1, activeCategory, false).finally(() => setLoading(false));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // Re-fetch from page 1 when category changes
+  function handleCategoryChange(cat: BeverageCategory | "All") {
+    setActiveCategory(cat);
+    setSearch("");
+    setLoading(true);
+    fetchPage(1, cat, false).finally(() => setLoading(false));
+  }
+
+  async function handleLoadMore() {
+    setLoadingMore(true);
+    await fetchPage(page + 1, activeCategory, true);
+    setLoadingMore(false);
+  }
+
+  const hasMore = allEntries.length < total;
+
+  // Search is client-side on loaded entries only
   const filtered = allEntries.filter((e) => {
-    const matchesCategory = activeCategory === "All" || e.category === activeCategory;
     const q = search.toLowerCase();
-    const matchesSearch =
-      !q ||
+    return !q ||
       e.beverageName.toLowerCase().includes(q) ||
       e.cafeName.toLowerCase().includes(q) ||
       (e.cafeCity ?? "").toLowerCase().includes(q);
-    return matchesCategory && matchesSearch;
   });
 
   // Group by month label, preserving order (entries are sorted newest first)
@@ -176,7 +204,7 @@ export default function HistoryPage() {
           <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
             <button
               type="button"
-              onClick={() => setActiveCategory("All")}
+              onClick={() => handleCategoryChange("All")}
               className={`px-4 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all ${
                 activeCategory === "All"
                   ? "bg-secondary-container text-on-secondary-container"
@@ -189,7 +217,7 @@ export default function HistoryPage() {
               <button
                 key={cat}
                 type="button"
-                onClick={() => setActiveCategory(cat)}
+                onClick={() => handleCategoryChange(cat)}
                 className={`px-4 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all ${
                   activeCategory === cat
                     ? "bg-secondary-container text-on-secondary-container"
@@ -200,6 +228,21 @@ export default function HistoryPage() {
               </button>
             ))}
           </div>
+
+          {/* Search scope note — shown when there are unloaded pages */}
+          {hasMore && search && (
+            <p className="text-[10px] text-on-surface-variant/60 font-medium">
+              Searching {allEntries.length} of {total} entries —{" "}
+              <button
+                type="button"
+                onClick={handleLoadMore}
+                className="text-primary underline underline-offset-2"
+              >
+                load more
+              </button>{" "}
+              to search all
+            </p>
+          )}
         </section>
 
         {/* Grouped entries */}
@@ -284,6 +327,29 @@ export default function HistoryPage() {
                 </div>
               </div>
             ))}
+          {/* Load More */}
+          {hasMore && (
+            <div className="flex flex-col items-center gap-2 pt-2">
+              <p className="text-[10px] font-medium text-on-surface-variant/50 uppercase tracking-widest">
+                Showing {allEntries.length} of {total} entries
+              </p>
+              <button
+                type="button"
+                onClick={handleLoadMore}
+                disabled={loadingMore}
+                className="px-6 py-3 rounded-xl bg-surface-container text-on-surface text-sm font-bold hover:bg-surface-container-high transition-colors disabled:opacity-50 flex items-center gap-2"
+              >
+                {loadingMore ? (
+                  <>
+                    <span className="material-symbols-outlined text-base animate-spin">progress_activity</span>
+                    Loading…
+                  </>
+                ) : (
+                  "Load More"
+                )}
+              </button>
+            </div>
+          )}
           </div>
         )}
 

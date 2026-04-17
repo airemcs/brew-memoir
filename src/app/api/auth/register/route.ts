@@ -3,6 +3,7 @@ import { z } from "zod";
 import { connectDB } from "@/lib/db";
 import { User } from "@/lib/models";
 import { hashPassword } from "@/lib/utils";
+import { registerLimiter, getIp } from "@/lib/ratelimit";
 
 const RegisterSchema = z.object({
   name: z.string().min(1, "Name is required").max(100),
@@ -11,6 +12,20 @@ const RegisterSchema = z.object({
 });
 
 export async function POST(req: NextRequest) {
+  if (registerLimiter) {
+    const ip = getIp(req.headers);
+    const { success, reset } = await registerLimiter.limit(ip);
+    if (!success) {
+      return NextResponse.json(
+        { error: "Too many registration attempts. Try again later." },
+        {
+          status: 429,
+          headers: { "Retry-After": String(Math.ceil((reset - Date.now()) / 1000)) },
+        }
+      );
+    }
+  }
+
   const body = await req.json().catch(() => null);
   const parsed = RegisterSchema.safeParse(body);
 

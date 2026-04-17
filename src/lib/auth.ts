@@ -6,6 +6,7 @@ import { connectDB } from "@/lib/db";
 import { User } from "@/lib/models";
 import clientPromise from "@/lib/mongoClient";
 import { verifyPassword } from "@/lib/utils";
+import { signinLimiter, getIp } from "@/lib/ratelimit";
 
 export const authOptions: AuthOptions = {
   adapter: MongoDBAdapter(clientPromise) as AuthOptions["adapter"],
@@ -22,7 +23,13 @@ export const authOptions: AuthOptions = {
         email: { label: "Email", type: "email" },
         password: { label: "Password", type: "password" },
       },
-      async authorize(credentials) {
+      async authorize(credentials, req) {
+        if (signinLimiter) {
+          const ip = getIp(req.headers as Record<string, string | string[] | undefined>);
+          const { success } = await signinLimiter.limit(ip);
+          if (!success) throw new Error("Too many sign-in attempts. Try again in 15 minutes.");
+        }
+
         if (!credentials?.email || !credentials?.password) return null;
         await connectDB();
         const user = await User.findOne({ email: credentials.email.toLowerCase() }).select("+passwordHash");
