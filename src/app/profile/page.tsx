@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { signOut } from "next-auth/react";
 import { BEVERAGE_CATEGORIES, TASTING_NOTES } from "@/types";
 import type { BeverageCategory } from "@/types";
 
@@ -353,9 +354,7 @@ export default function ProfilePage() {
         {/* Sign Out */}
         <button
           className="w-full py-3.5 rounded-2xl font-bold text-sm tracking-wide text-white bg-linear-to-r from-primary to-primary/80 shadow-md active:scale-[0.98] transition-transform duration-150"
-          onClick={() => {
-            // Replace with: signOut() from next-auth/react
-          }}
+          onClick={() => signOut({ callbackUrl: "/auth/signin" })}
         >
           Sign Out
         </button>

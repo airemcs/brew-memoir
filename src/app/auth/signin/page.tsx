@@ -9,7 +9,7 @@ const inputClass =
   "w-full bg-transparent border-b border-outline-variant/30 py-3 text-sm text-on-background placeholder:text-on-surface-variant/40 focus:outline-none focus:border-primary transition-colors";
 
 export default function SignInPage() {
-  const [mode, setMode] = useState<Mode>("signup");
+  const [mode, setMode] = useState<Mode>("signin");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -67,7 +67,7 @@ export default function SignInPage() {
   }
 
   return (
-    <div className="bg-background text-on-background min-h-dvh flex flex-col items-center">
+    <div className="bg-background text-on-background min-h-dvh flex flex-col items-center justify-center">
 
       {/* Decorative background */}
       <div className="fixed top-0 right-0 w-1/3 h-full bg-surface-container-low -z-10 opacity-30" />
@@ -75,25 +75,28 @@ export default function SignInPage() {
       <div className="fixed top-24 left-10 w-px h-32 bg-outline-variant opacity-20 -z-10" />
       <div className="fixed top-56 left-8 w-px h-12 bg-primary opacity-10 -z-10" />
 
-      {/* Header */}
-      <header className="w-full max-w-7xl mx-auto px-6 py-8 flex justify-between items-center">
-        <div className="font-extrabold tracking-tighter text-xl text-primary">Brew Memoir</div>
-        <span className="material-symbols-outlined text-on-surface-variant opacity-40 text-xl">local_cafe</span>
-      </header>
-
       {/* Main */}
-      <main className="flex-1 w-full max-w-md px-6 pb-16 flex flex-col justify-center">
+      <main className="flex-1 w-full max-w-md px-6 flex flex-col justify-center">
 
         {/* Hero */}
-        <div className="mb-12">
-          <span className="text-[0.6875rem] uppercase tracking-[0.2em] font-semibold text-on-surface-variant block mb-3">
-            {mode === "signup" ? "Get Started" : "Welcome Back"}
-          </span>
+        <div className={`mb-12 ${mode === "signin" ? "text-center mx-auto w-full" : ""}`}>
+          {mode === "signin" && (
+            <div className="flex justify-center mb-8">
+              <div className="w-16 h-16 rounded-2xl bg-primary-container flex items-center justify-center shadow-sm">
+                <span className="material-symbols-outlined text-primary text-3xl">local_cafe</span>
+              </div>
+            </div>
+          )}
+          {mode === "signup" && (
+            <span className="text-[0.6875rem] uppercase tracking-[0.2em] font-semibold text-on-surface-variant block mb-3">
+              Get Started
+            </span>
+          )}
           <h1 className="text-4xl font-extrabold tracking-tight text-on-background mb-3">
-            {mode === "signup" ? "Create Archive" : "Open Archive"}
+            {mode === "signup" ? "Create Archive" : "Brew Memoir"}
           </h1>
           <p className="text-on-surface-variant leading-relaxed">
-            {mode === "signup" ? "Begin your sensory journey." : "Continue where you left off."}
+            {mode === "signup" ? "Begin your sensory journey." : "The ritual of the perfect brew, recorded."}
           </p>
         </div>
 
