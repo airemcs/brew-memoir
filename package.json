@@ -10,6 +10,7 @@
     "seed": "tsx scripts/seed.ts",
     "seed:clear": "tsx scripts/seed.ts --clear",
     "wipe": "tsx scripts/wipe.ts",
+    "wipe:all": "tsx scripts/wipe.ts --all",
     "seed:personal": "tsx scripts/my-seed.ts"
   },
   "dependencies": {
