@@ -150,16 +150,18 @@ async function getHomeData(): Promise<HomeData> {
     weeklyMap.set(key, row.total);
   }
 
-  const slotTotals = weekSlots.map(({ start }) => {
-    const d = new Date(start);
-    // ISO week of this Monday: use the same approach
-    const thursday = new Date(d);
-    thursday.setDate(d.getDate() + 3); // Thursday of that week determines ISO year/week
-    const jan4 = new Date(thursday.getFullYear(), 0, 4);
-    const isoWeek = Math.ceil((((thursday.getTime() - jan4.getTime()) / 86_400_000) + jan4.getDay() + 1) / 7);
-    const isoWeekYear = thursday.getFullYear();
-    return weeklyMap.get(`${isoWeekYear}-${isoWeek}`) ?? 0;
-  });
+  function getISOWeekKey(date: Date): string {
+    // ISO 8601: find the Thursday of the week, then derive year and week number
+    const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+    d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7)); // shift to Thursday
+    const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+    const isoWeek = Math.ceil(((d.getTime() - yearStart.getTime()) / 86_400_000 + 1) / 7);
+    return `${d.getUTCFullYear()}-${isoWeek}`;
+  }
+
+  const slotTotals = weekSlots.map(({ start }) =>
+    weeklyMap.get(getISOWeekKey(start)) ?? 0
+  );
 
   const maxSlot = Math.max(...slotTotals, 1);
   // Normalize to 0–1; give empty weeks a 0.05 floor so they're visible
@@ -169,7 +171,7 @@ async function getHomeData(): Promise<HomeData> {
 
   const totalWeeklySpend = slotTotals.reduce((s, v) => s + v, 0);
   const nonZeroWeeks = slotTotals.filter((v) => v > 0).length;
-  const weeklyAverage = nonZeroWeeks > 0 ? Math.round(totalWeeklySpend / nonZeroWeeks) : 0;
+  const weeklyAverage = nonZeroWeeks > 0 ? Math.round((totalWeeklySpend / nonZeroWeeks) * 100) / 100 : 0;
 
   // Recent entries — serialize ObjectIds/Dates via JSON round-trip
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -185,10 +187,10 @@ async function getHomeData(): Promise<HomeData> {
 // Helpers
 // ---------------------------------------------------------------------------
 
-function formatPrice(amount: number): string {
+function formatPrice(amount: number, decimals = 0): string {
   return amount.toLocaleString("en-PH", {
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
+    minimumFractionDigits: decimals,
+    maximumFractionDigits: decimals,
   });
 }
 
@@ -358,7 +360,7 @@ export default async function HomePage() {
                 Weekly Average
               </h3>
               <div className="text-2xl font-extrabold tracking-tight text-primary">
-                ₱{formatPrice(data.weeklyAverage)}
+                ₱{formatPrice(data.weeklyAverage, 2)}
               </div>
             </div>
             {/* trend: 5 weekly values normalized 0–1, oldest → newest */}
