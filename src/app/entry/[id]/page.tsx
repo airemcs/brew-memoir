@@ -213,7 +213,9 @@ export default async function EntryDetailPage({ params }: { params: Promise<{ id
           {entry.addOns.map((addon, i) => (
             <div key={i} className="flex justify-between items-center text-sm">
               <span className="text-on-surface-variant">Add-on ({addon.name})</span>
-              <span className="font-medium text-on-surface">+₱{formatPrice(addon.price)}</span>
+              {!!addon.price && Number(addon.price) > 0 && (
+                <span className="font-medium text-on-surface">+₱{formatPrice(addon.price)}</span>
+              )}
             </div>
           ))}
           <div className="pt-4 border-t border-outline-variant/10 flex justify-between items-center">

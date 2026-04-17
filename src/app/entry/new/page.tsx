@@ -655,9 +655,11 @@ export default function NewEntryPage() {
                     </div>
                   </div>
                   <div className="flex items-center gap-3">
-                    <span className="text-xs font-semibold text-on-surface-variant self-center">
-                      +₱{addon.price.toFixed(2)}
-                    </span>
+                    {addon.price > 0 && (
+                      <span className="text-xs font-semibold text-on-surface-variant self-center">
+                        +₱{addon.price.toFixed(2)}
+                      </span>
+                    )}
                     <button
                       type="button"
                       onClick={() => setAddOns((prev) => prev.filter((_, i) => i !== idx))}
