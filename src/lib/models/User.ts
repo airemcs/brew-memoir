@@ -35,6 +35,15 @@ const UserSchema = new Schema<IUserDocument>(
   { timestamps: true }
 );
 
+// ── Indexes ──────────────────────────────────────────────────────────────────
+//
+// email already has { unique: true } declared on the field, which creates an
+// index automatically. Explicitly add it here for clarity and to set
+// collation so lookups are case-insensitive without a toLowerCase() call.
+// The CredentialsProvider already lowercases on input, so this is belt-and-
+// suspenders for any future direct lookups.
+UserSchema.index({ email: 1 }, { unique: true, collation: { locale: "en", strength: 2 } });
+
 // Prevent model re-compilation during hot-reload in development.
 const User = models.User ?? model<IUserDocument>("User", UserSchema);
 export default User;

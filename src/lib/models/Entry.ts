@@ -67,10 +67,31 @@ const EntrySchema = new Schema<IEntryDocument>(
   { timestamps: true }
 );
 
-// Compound index for efficient per-user queries sorted by date
+// ── Indexes ──────────────────────────────────────────────────────────────────
+//
+// Rule of thumb: every compound index starts with userId (all queries are
+// user-scoped) then the equality fields, then the sort field last.
+//
+// Journal feed — GET /api/entries sorted newest-first
 EntrySchema.index({ userId: 1, date: -1 });
-EntrySchema.index({ userId: 1, cafeId: 1 });
-EntrySchema.index({ userId: 1, category: 1 });
+
+// Cafe brew history — GET /api/cafes/[id]/entries + cafe aggregations
+// Replaces the old { userId, cafeId } — adding date makes the sort covered.
+EntrySchema.index({ userId: 1, cafeId: 1, date: -1 });
+
+// History page category filter — GET /api/entries?category=X sorted by date
+// Replaces the old { userId, category } — date makes the sort covered.
+EntrySchema.index({ userId: 1, category: 1, date: -1 });
+
+// Monthly spend aggregations — $match userId + date range, $sum totalPrice
+// Including totalPrice makes the aggregation a covered query (no doc fetch).
+EntrySchema.index({ userId: 1, date: -1, totalPrice: 1 });
+
+// Top-choices analytics — $match userId + date range, $group by beverageName
+EntrySchema.index({ userId: 1, beverageName: 1, date: -1 });
+
+// Future: top-rated drinks, rating-sorted lists per user
+EntrySchema.index({ userId: 1, rating: -1 });
 
 // Auto-calculate totalPrice before saving
 EntrySchema.pre("save", async function () {

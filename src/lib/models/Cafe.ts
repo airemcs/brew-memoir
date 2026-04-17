@@ -23,8 +23,16 @@ const CafeSchema = new Schema<ICafeDocument>(
   { timestamps: true }
 );
 
-// Each user has their own cafe records; names should be unique per user.
+// ── Indexes ──────────────────────────────────────────────────────────────────
+//
+// Cafe upsert on entry creation — findOneAndUpdate({ userId, name })
 CafeSchema.index({ userId: 1, name: 1 }, { unique: true });
+
+// Cafe list page — Cafe.find({ userId }).sort({ updatedAt: -1 })
+CafeSchema.index({ userId: 1, updatedAt: -1 });
+
+// Future: favorites filter — Cafe.find({ userId, isFavorite: true })
+CafeSchema.index({ userId: 1, isFavorite: 1 });
 
 // Cafe stats (totalVisits, totalSpent, lastVisited, peakHour, visitFrequency)
 // are computed via aggregation on the Entry collection — not stored here.
