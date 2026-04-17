@@ -4,8 +4,10 @@ import { NextRequest, NextResponse } from "next/server";
 // ---------------------------------------------------------------------------
 // Route protection middleware
 //
-// All /api/* routes require a valid JWT session, except /api/auth/* which
-// is handled by NextAuth itself (sign-in, callback, CSRF token, etc.).
+// - Page routes: unauthenticated users are redirected to /auth/signin
+// - API routes:  unauthenticated requests get a 401 JSON response
+// - /auth/* and /api/auth/* are always public (NextAuth + sign-in/sign-up UI)
+// - /api/health is public
 // ---------------------------------------------------------------------------
 
 export async function middleware(req: NextRequest) {
@@ -18,18 +20,26 @@ export async function middleware(req: NextRequest) {
     return NextResponse.next();
   }
 
-  const token = await getToken({
-    req,
-    secret: process.env.NEXTAUTH_SECRET,
-  });
+  const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
+  const { pathname } = req.nextUrl;
 
   if (!token) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    if (pathname.startsWith("/api/")) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+    const signInUrl = new URL("/auth/signin", req.url);
+    signInUrl.searchParams.set("callbackUrl", req.url);
+    return NextResponse.redirect(signInUrl);
   }
 
   return NextResponse.next();
 }
 
 export const config = {
-  matcher: ["/api/((?!auth/|health).*)"],
+  matcher: [
+    // Protect all pages except /auth/*
+    "/((?!auth/|_next/static|_next/image|favicon.ico).*)",
+    // Protect all API routes except /api/auth/* and /api/health
+    "/api/((?!auth/|health).*)",
+  ],
 };
