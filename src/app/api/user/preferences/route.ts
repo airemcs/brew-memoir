@@ -48,7 +48,7 @@ export async function GET(_req: NextRequest) {
     ?.preferences;
 
   return NextResponse.json({
-    monthlyBudget: prefs?.monthlyBudget ?? 10_000,
+    monthlyBudget: prefs?.monthlyBudget ?? 2_000,
     currency: prefs?.currency ?? "PHP",
   });
 }
@@ -102,7 +102,7 @@ export async function PUT(req: NextRequest) {
     ?.preferences;
 
   return NextResponse.json({
-    monthlyBudget: prefs?.monthlyBudget ?? parsed.data.monthlyBudget ?? 10_000,
+    monthlyBudget: prefs?.monthlyBudget ?? parsed.data.monthlyBudget ?? 2_000,
     currency: prefs?.currency ?? parsed.data.currency ?? "PHP",
   });
 }

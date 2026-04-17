@@ -91,7 +91,7 @@ export default function ProfilePage() {
   const [memberSince, setMemberSince] = useState("");
 
   // Budget
-  const [budget, setBudget] = useState<number>(10_000);
+  const [budget, setBudget] = useState<number>(2_000);
   const [editingBudget, setEditingBudget] = useState(false);
   const [budgetDraft, setBudgetDraft] = useState("");
   const [notificationsOn, setNotificationsOn] = useState(true);

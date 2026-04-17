@@ -236,7 +236,7 @@ async function seed() {
         name: "Airelle M.",
         email: "dev@brewmemoir.local",
         authProvider: "credentials",
-        preferences: { monthlyBudget: 10_000, currency: "PHP" },
+        preferences: { monthlyBudget: 2_000, currency: "PHP" },
       },
     },
     { upsert: true, returnDocument: "after" }

@@ -9,7 +9,7 @@ export interface IUserDocument extends Document {
   // Only set for credentials-provider accounts; never exposed to the client.
   passwordHash?: string;
   preferences: {
-    monthlyBudget: number; // in PHP, default 10000
+    monthlyBudget: number; // in PHP, default 2000
     currency: string;      // ISO 4217 code, default "PHP"
   };
   createdAt: Date;
@@ -28,7 +28,7 @@ const UserSchema = new Schema<IUserDocument>(
     },
     passwordHash: { type: String, select: false }, // excluded from queries by default
     preferences: {
-      monthlyBudget: { type: Number, default: 10_000 },
+      monthlyBudget: { type: Number, default: 2_000 },
       currency: { type: String, default: "PHP" },
     },
   },

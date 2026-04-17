@@ -50,7 +50,7 @@ async function getHomeData(): Promise<HomeData> {
   if (!userId) {
     return {
       monthlySpent: 0,
-      budgetAmount: 10_000,
+      budgetAmount: 2_000,
       totalDrinksThisMonth: 0,
       categoryBreakdown: [],
       mostVisited: null as HomeData["mostVisited"],
@@ -117,7 +117,7 @@ async function getHomeData(): Promise<HomeData> {
   const totalDrinksThisMonth: number = monthlyAgg[0]?.count ?? 0;
   const budgetAmount: number =
     (userDoc as { preferences?: { monthlyBudget?: number } } | null)
-      ?.preferences?.monthlyBudget ?? 10_000;
+      ?.preferences?.monthlyBudget ?? 2_000;
 
   // Category breakdown
   const totalDrinksForPct = categoryAgg.reduce((s: number, r: { count: number }) => s + r.count, 0);

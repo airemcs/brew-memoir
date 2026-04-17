@@ -50,7 +50,7 @@ export async function GET(_req: NextRequest) {
   // Fall back to 10 000 for dev users who may not have a User document
   const budgetAmount: number =
     (user as { preferences?: { monthlyBudget?: number } } | null)
-      ?.preferences?.monthlyBudget ?? 10_000;
+      ?.preferences?.monthlyBudget ?? 2_000;
 
   return NextResponse.json({ totalSpent, budgetAmount });
 }

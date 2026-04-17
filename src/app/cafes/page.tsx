@@ -15,6 +15,27 @@ type CafeEntry = ICafeWithStats & {
   lastCategory: BeverageCategory;
 };
 
+type CategorySlice = { category: string; percentage: number; count: number };
+
+const CATEGORY_COLORS = [
+  "bg-primary", "bg-secondary", "bg-tertiary",
+  "bg-primary/60", "bg-secondary/60", "bg-tertiary/60",
+];
+
+async function getCategoryBreakdown(userObjectId: Types.ObjectId): Promise<CategorySlice[]> {
+  const agg = await Entry.aggregate([
+    { $match: { userId: userObjectId } },
+    { $group: { _id: "$category", count: { $sum: 1 } } },
+    { $sort: { count: -1 } },
+  ]);
+  const total = agg.reduce((s: number, r: { count: number }) => s + r.count, 0);
+  return agg.map((r: { _id: string; count: number }) => ({
+    category: r._id,
+    count: r.count,
+    percentage: total > 0 ? Math.round((r.count / total) * 100) : 0,
+  }));
+}
+
 async function getCafes(): Promise<CafeEntry[]> {
   const userId = await getServerUserId();
   if (!userId) return [];
@@ -88,7 +109,13 @@ function formatPrice(amount: number): string {
 // ---------------------------------------------------------------------------
 
 export default async function CafesPage() {
-  const cafes = await getCafes();
+  const userId = await getServerUserId();
+  const userObjectId = userId ? new Types.ObjectId(userId) : null;
+
+  const [cafes, categoryBreakdown] = await Promise.all([
+    getCafes(),
+    userObjectId ? getCategoryBreakdown(userObjectId) : Promise.resolve([]),
+  ]);
 
   // Most visited — highest totalVisits
   const featured = cafes.length > 0
@@ -101,8 +128,8 @@ export default async function CafesPage() {
     ? [...rated].sort((a, b) => (b.stats.averageRating ?? 0) - (a.stats.averageRating ?? 0))[0]
     : null;
 
-  // Replace with: GET /api/analytics/cafes — portfolio total
   const portfolioTotal = cafes.reduce((sum, c) => sum + c.stats.totalSpent, 0);
+  const topCategory = categoryBreakdown[0];
 
   return (
     <>
@@ -266,14 +293,26 @@ export default async function CafesPage() {
             <div className="w-px bg-outline-variant/15 hidden md:block self-stretch" />
             <div className="flex-1">
               <h4 className="text-[0.625rem] uppercase tracking-[0.2em] text-on-surface-variant mb-3">
-                Roaster Diversity
+                Category Mix
               </h4>
-              <div className="flex gap-2 mb-2">
-                <div className="h-1 flex-1 bg-primary rounded-full" />
-                <div className="h-1 flex-1 bg-secondary rounded-full" />
-                <div className="h-1 w-8 bg-tertiary rounded-full" />
-              </div>
-              <p className="text-xs text-on-surface-variant">72% Dark Roast profile preference</p>
+              {categoryBreakdown.length > 0 ? (
+                <>
+                  <div className="flex gap-1 mb-2 rounded-full overflow-hidden h-1">
+                    {categoryBreakdown.map((c, i) => (
+                      <div
+                        key={c.category}
+                        className={`h-full ${CATEGORY_COLORS[i % CATEGORY_COLORS.length]}`}
+                        style={{ width: `${c.percentage}%` }}
+                      />
+                    ))}
+                  </div>
+                  <p className="text-xs text-on-surface-variant">
+                    {topCategory.percentage}% {topCategory.category}
+                  </p>
+                </>
+              ) : (
+                <p className="text-xs text-on-surface-variant">No entries yet</p>
+              )}
             </div>
           </div>
 
