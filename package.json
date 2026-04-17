@@ -11,7 +11,8 @@
     "seed:clear": "tsx scripts/seed.ts --clear",
     "wipe": "tsx scripts/wipe.ts",
     "wipe:all": "tsx scripts/wipe.ts --all",
-    "seed:personal": "tsx scripts/my-seed.ts"
+    "seed:personal": "tsx scripts/my-seed.ts",
+    "seed:stress": "tsx scripts/stress-seed.ts"
   },
   "dependencies": {
     "@auth/mongodb-adapter": "^3.11.1",
