@@ -37,8 +37,8 @@ export async function middleware(req: NextRequest) {
 
 export const config = {
   matcher: [
-    // Protect all pages except /auth/*
-    "/((?!auth/|_next/static|_next/image|favicon.ico).*)",
+    // Protect all pages except /auth/* and /api/auth/*
+    "/((?!auth/|api/auth/|_next/static|_next/image|favicon.ico).*)",
     // Protect all API routes except /api/auth/* and /api/health
     "/api/((?!auth/|health).*)",
   ],

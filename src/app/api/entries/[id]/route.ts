@@ -5,6 +5,20 @@ import { connectDB } from "@/lib/db";
 import { Entry } from "@/lib/models";
 import { deleteImage, getPublicId } from "@/lib/cloudinary";
 
+const DEV_USER_ID = "000000000000000000000001";
+function isBypassAuth() {
+  return process.env.BYPASS_AUTH === "true" && process.env.NODE_ENV !== "production";
+}
+
+async function getUserId(): Promise<string | null> {
+  try {
+    const session = await getAuthSession();
+    return session.user.id;
+  } catch {
+    return isBypassAuth() ? DEV_USER_ID : null;
+  }
+}
+
 // ---------------------------------------------------------------------------
 // Shared ownership guard
 //
@@ -38,13 +52,8 @@ export async function GET(
   _req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  let userId: string;
-  try {
-    const session = await getAuthSession();
-    userId = session.user.id;
-  } catch {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const userId = await getUserId();
+  if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   await connectDB();
   const { id } = await params;
@@ -65,13 +74,8 @@ export async function DELETE(
   _req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  let userId: string;
-  try {
-    const session = await getAuthSession();
-    userId = session.user.id;
-  } catch {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const userId = await getUserId();
+  if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   await connectDB();
   const { id } = await params;

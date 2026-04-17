@@ -122,7 +122,7 @@ function AutocompleteInput({
       const stored = JSON.parse(localStorage.getItem(lsKey) ?? "[]") as string[];
       setAll(Array.from(new Set([...stored, ...seeds])));
     } catch { /* ignore */ }
-  }, []);
+  }, [seeds, lsKey]);
 
   useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
@@ -220,16 +220,17 @@ export default function NewEntryPage() {
     setPhotoPreview(URL.createObjectURL(file));
   }
 
+  const [lsUserId, setLsUserId] = useState("anon");
+
   useEffect(() => {
-    fetch("/api/cafes")
-      .then((r) => r.json())
-      .then((data: { name: string; address?: string }[]) => {
-        setSeedCafes(data.map((c) => c.name));
-        setSeedCities(
-          Array.from(new Set(data.map((c) => c.address ?? "").filter(Boolean)))
-        );
-      })
-      .catch(() => {});
+    Promise.all([
+      fetch("/api/cafes").then((r) => r.ok ? r.json() : []),
+      fetch("/api/user/me").then((r) => r.ok ? r.json() : null),
+    ]).then(([cafes, me]: [{ name: string; address?: string }[], { email?: string } | null]) => {
+      setSeedCafes(cafes.map((c) => c.name));
+      setSeedCities(Array.from(new Set(cafes.map((c) => c.address ?? "").filter(Boolean))));
+      if (me?.email) setLsUserId(me.email);
+    }).catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -571,7 +572,7 @@ export default function NewEntryPage() {
                 value={cafeName}
                 onChange={setCafeName}
                 seeds={seedCafes}
-                lsKey="brew-memoir:cafes"
+                lsKey={`brew-memoir:${lsUserId}:cafes`}
                 placeholder="Yardstick Coffee"
               />
             </div>
@@ -584,7 +585,7 @@ export default function NewEntryPage() {
                 value={cafeCity}
                 onChange={setCafeCity}
                 seeds={seedCities}
-                lsKey="brew-memoir:cities"
+                lsKey={`brew-memoir:${lsUserId}:cities`}
                 placeholder="Makati, Metro Manila"
               />
             </div>
