@@ -262,7 +262,7 @@ export default async function CafeDetailPage({ params }: { params: Promise<{ id:
             <h3 className="text-[0.625rem] uppercase tracking-wide font-bold text-on-surface-variant">
               Brew History
             </h3>
-            <Link href="/profile/history" className="text-[0.625rem] font-bold text-primary">
+            <Link href={`/profile/history?cafe=${encodeURIComponent(cafe.name)}`} className="text-[0.625rem] font-bold text-primary">
               View All
             </Link>
           </div>

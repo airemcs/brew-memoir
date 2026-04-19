@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { useSearchParams } from "next/navigation";
 import type { BeverageCategory, IEntry } from "@/types";
 import { BEVERAGE_CATEGORIES } from "@/types";
 
@@ -79,17 +80,21 @@ function toDisplay(e: IEntry): EntryWithDisplay {
 }
 
 export default function HistoryPage() {
+  const searchParams = useSearchParams();
   const [allEntries, setAllEntries] = useState<EntryWithDisplay[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useState(() => searchParams.get("cafe") ?? "");
   const [activeCategory, setActiveCategory] = useState<BeverageCategory | "All">("All");
 
-  async function fetchPage(pageNum: number, category: BeverageCategory | "All", append: boolean) {
-    const catParam = category !== "All" ? `&category=${encodeURIComponent(category)}` : "";
-    const data = await fetch(`/api/entries?page=${pageNum}&limit=${PAGE_SIZE}${catParam}`)
+  async function fetchPage(pageNum: number, category: BeverageCategory | "All", searchQ: string, append: boolean) {
+    const params = new URLSearchParams({ page: String(pageNum), limit: String(PAGE_SIZE) });
+    if (category !== "All") params.set("category", category);
+    if (searchQ.trim()) params.set("search", searchQ.trim());
+
+    const data = await fetch(`/api/entries?${params}`)
       .then((r) => r.json())
       .catch(() => ({ entries: [], total: 0 }));
 
@@ -102,34 +107,36 @@ export default function HistoryPage() {
   // Initial load
   useEffect(() => {
     setLoading(true);
-    fetchPage(1, activeCategory, false).finally(() => setLoading(false));
+    fetchPage(1, activeCategory, search, false).finally(() => setLoading(false));
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Re-fetch when search changes (debounced)
+  useEffect(() => {
+    const t = setTimeout(() => {
+      setLoading(true);
+      fetchPage(1, activeCategory, search, false).finally(() => setLoading(false));
+    }, 300);
+    return () => clearTimeout(t);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [search]);
 
   // Re-fetch from page 1 when category changes
   function handleCategoryChange(cat: BeverageCategory | "All") {
     setActiveCategory(cat);
-    setSearch("");
     setLoading(true);
-    fetchPage(1, cat, false).finally(() => setLoading(false));
+    fetchPage(1, cat, search, false).finally(() => setLoading(false));
   }
 
   async function handleLoadMore() {
     setLoadingMore(true);
-    await fetchPage(page + 1, activeCategory, true);
+    await fetchPage(page + 1, activeCategory, search, true);
     setLoadingMore(false);
   }
 
   const hasMore = allEntries.length < total;
 
-  // Search is client-side on loaded entries only
-  const filtered = allEntries.filter((e) => {
-    const q = search.toLowerCase();
-    return !q ||
-      e.beverageName.toLowerCase().includes(q) ||
-      e.cafeName.toLowerCase().includes(q) ||
-      (e.cafeCity ?? "").toLowerCase().includes(q);
-  });
+  const filtered = allEntries;
 
   // Group by month label, preserving order (entries are sorted newest first)
   const grouped = filtered.reduce<Record<string, EntryWithDisplay[]>>((acc, entry) => {
@@ -229,20 +236,6 @@ export default function HistoryPage() {
             ))}
           </div>
 
-          {/* Search scope note — shown when there are unloaded pages */}
-          {hasMore && search && (
-            <p className="text-[10px] text-on-surface-variant/60 font-medium">
-              Searching {allEntries.length} of {total} entries —{" "}
-              <button
-                type="button"
-                onClick={handleLoadMore}
-                className="text-primary underline underline-offset-2"
-              >
-                load more
-              </button>{" "}
-              to search all
-            </p>
-          )}
         </section>
 
         {/* Grouped entries */}

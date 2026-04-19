@@ -31,11 +31,17 @@ export async function GET(req: NextRequest) {
   const page = Math.max(1, parseInt(searchParams.get("page") ?? "1", 10));
   const limit = Math.min(100, Math.max(1, parseInt(searchParams.get("limit") ?? "20", 10)));
   const category = searchParams.get("category");
+  const search = searchParams.get("search")?.trim();
 
   const filter: Record<string, unknown> = { userId: new Types.ObjectId(userId) };
 
   if (category && (BEVERAGE_CATEGORIES as readonly string[]).includes(category)) {
     filter.category = category as BeverageCategory;
+  }
+
+  if (search) {
+    const re = new RegExp(search.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "i");
+    filter.$or = [{ cafeName: re }, { beverageName: re }, { cafeCity: re }];
   }
 
   const [entries, total] = await Promise.all([
