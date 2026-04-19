@@ -290,32 +290,10 @@ export default async function CafeDetailPage({ params }: { params: Promise<{ id:
           </div>
         </section>
 
-        {/* Branches */}
-        {cafe.branches.length > 0 && (
-          <section className="mb-8">
-            <h3 className="text-[0.625rem] uppercase tracking-wide font-bold text-on-surface-variant mb-4">
-              Locations
-            </h3>
-            <div className="flex flex-col gap-2">
-              {cafe.branches.map((branch) => (
-                <div key={branch._id} className="flex items-center gap-3 p-4 bg-surface-container-low rounded-xl">
-                  <span className="material-symbols-outlined text-primary text-lg">location_on</span>
-                  <div>
-                    <p className="text-sm font-bold text-on-surface">{branch.label}</p>
-                    {branch.city && (
-                      <p className="text-xs text-on-surface-variant">{branch.city}</p>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </section>
-        )}
-
-        {/* Location */}
+        {/* Location & Branches */}
         <section className="mb-8">
           <h3 className="text-[0.625rem] uppercase tracking-wide font-bold text-on-surface-variant mb-6">
-            Location & Directions
+            {cafe.branches.length > 0 ? "Locations" : "Location"}
           </h3>
           <div className="bg-surface-container-low rounded-2xl overflow-hidden">
             <div className="h-48 w-full relative overflow-hidden">
@@ -394,12 +372,28 @@ export default async function CafeDetailPage({ params }: { params: Promise<{ id:
                 </div>
               </div>
             </div>
-            <div className="p-5">
-              <button className="w-full py-3.5 bg-linear-to-r from-primary to-primary-dim text-on-primary font-bold rounded-xl active:scale-[0.98] transition-transform duration-200 flex items-center justify-center gap-2 text-sm">
-                <span className="material-symbols-outlined text-sm">map</span>
-                Open in Maps
-              </button>
-            </div>
+            {cafe.branches.length > 0 ? (
+              <div className="p-4 flex flex-col gap-2">
+                {cafe.branches.map((branch) => (
+                  <div key={branch._id} className="flex items-center gap-3 p-3 bg-surface rounded-xl">
+                    <span className="material-symbols-outlined text-primary text-lg">location_on</span>
+                    <div>
+                      <p className="text-sm font-bold text-on-surface">{branch.label}</p>
+                      {branch.city && (
+                        <p className="text-xs text-on-surface-variant">{branch.city}</p>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="p-5">
+                <button className="w-full py-3.5 bg-linear-to-r from-primary to-primary-dim text-on-primary font-bold rounded-xl active:scale-[0.98] transition-transform duration-200 flex items-center justify-center gap-2 text-sm">
+                  <span className="material-symbols-outlined text-sm">map</span>
+                  Open in Maps
+                </button>
+              </div>
+            )}
           </div>
         </section>
 
