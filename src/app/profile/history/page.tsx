@@ -30,7 +30,7 @@ const CATEGORY_ICON: Record<BeverageCategory, string> = {
   Chocolate: "icecream",
   "Frappe & Blended": "local_drink",
   "Fruit & Refresher": "blender",
-  Specialty: "auto_awesome",
+  "Milk Tea": "emoji_food_beverage",
 };
 
 function formatPrice(amount: number): string {

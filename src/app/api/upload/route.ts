@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAuthSession } from "@/lib/session";
 import { uploadImage } from "@/lib/cloudinary";
+import { uploadLimiter } from "@/lib/ratelimit";
 
 // ---------------------------------------------------------------------------
 // POST /api/upload
@@ -17,10 +18,25 @@ import { uploadImage } from "@/lib/cloudinary";
 // ---------------------------------------------------------------------------
 
 export async function POST(req: NextRequest) {
+  let session: Awaited<ReturnType<typeof getAuthSession>>;
   try {
-    await getAuthSession();
+    session = await getAuthSession();
   } catch {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
+  if (uploadLimiter) {
+    try {
+      const { success } = await uploadLimiter.limit(session.user.id);
+      if (!success) {
+        return NextResponse.json(
+          { error: "Upload limit reached. Try again later." },
+          { status: 429 }
+        );
+      }
+    } catch (err) {
+      console.error("[upload] rate limit check failed:", err);
+    }
   }
 
   let formData: FormData;

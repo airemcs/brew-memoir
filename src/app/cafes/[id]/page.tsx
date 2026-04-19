@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Types } from "mongoose";
-import type { BeverageCategory, IEntry } from "@/types";
+import type { BeverageCategory, IBranch, IEntry } from "@/types";
 import { connectDB } from "@/lib/db";
 import { Cafe, Entry } from "@/lib/models";
 import { getServerUserId } from "@/lib/serverAuth";
@@ -17,6 +17,7 @@ interface CafeDetail {
   name: string;
   address: string;
   neighborhood: string;
+  branches: IBranch[];
   totalSpent: number;
   totalVisits: number;
   averageRating: number | null;
@@ -110,6 +111,7 @@ async function getCafe(id: string): Promise<CafeDetail | null> {
     name: cafe.name,
     address: cafe.address ?? "",
     neighborhood: cafe.neighborhood ?? cafe.address ?? "",
+    branches: JSON.parse(JSON.stringify(cafe.branches ?? [])),
     totalSpent,
     totalVisits,
     averageRating,
@@ -136,7 +138,7 @@ const CATEGORY_ICON: Record<BeverageCategory, string> = {
   Chocolate: "icecream",
   "Frappe & Blended": "local_drink",
   "Fruit & Refresher": "blender",
-  Specialty: "auto_awesome",
+  "Milk Tea": "emoji_food_beverage",
 };
 
 function Stars({ rating }: { rating: number }) {
@@ -303,6 +305,28 @@ export default async function CafeDetailPage({ params }: { params: Promise<{ id:
             ))}
           </div>
         </section>
+
+        {/* Branches */}
+        {cafe.branches.length > 0 && (
+          <section className="mb-8">
+            <h3 className="text-[0.625rem] uppercase tracking-wide font-bold text-on-surface-variant mb-4">
+              Locations
+            </h3>
+            <div className="flex flex-col gap-2">
+              {cafe.branches.map((branch) => (
+                <div key={branch._id} className="flex items-center gap-3 p-4 bg-surface-container-low rounded-xl">
+                  <span className="material-symbols-outlined text-primary text-lg">location_on</span>
+                  <div>
+                    <p className="text-sm font-bold text-on-surface">{branch.label}</p>
+                    {branch.city && (
+                      <p className="text-xs text-on-surface-variant">{branch.city}</p>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
 
         {/* Location */}
         <section className="mb-8">

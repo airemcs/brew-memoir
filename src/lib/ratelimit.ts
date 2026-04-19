@@ -25,8 +25,14 @@ function make(requests: number, window: `${number} ${"s" | "m" | "h" | "d"}`) {
   });
 }
 
+// 5 registrations per IP per hour
 export const registerLimiter = make(5, "1 h");
+
+// 10 sign-in attempts per IP per 15 minutes
 export const signinLimiter = make(10, "15 m");
+
+// 20 uploads per user per hour (keyed by userId, not IP)
+export const uploadLimiter = make(20, "1 h");
 
 // ---------------------------------------------------------------------------
 // getIp — extracts the real client IP from a request's headers.

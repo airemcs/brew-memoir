@@ -27,6 +27,7 @@ export const CreateEntrySchema = z.object({
   cafeName: z.string().min(1, "Cafe name is required").max(120),
   cafeId: objectIdString.optional(),
   cafeCity: z.string().max(120).optional(),
+  branchLabel: z.string().max(120).optional(),
   beverageName: z.string().min(1, "Beverage name is required").max(120),
   category: z.enum(BEVERAGE_CATEGORIES),
   date: z.string().datetime({ message: "Date must be a valid ISO-8601 string" }),

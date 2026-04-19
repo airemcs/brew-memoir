@@ -9,11 +9,11 @@ export const BEVERAGE_CATEGORIES = [
   "Espresso & Milk",
   "Matcha",
   "Hojicha",
+  "Milk Tea",
   "Tea",
   "Chocolate",
   "Frappe & Blended",
   "Fruit & Refresher",
-  "Specialty",
 ] as const;
 
 export type BeverageCategory = (typeof BEVERAGE_CATEGORIES)[number];
@@ -84,6 +84,8 @@ export interface IEntry {
   cafeName: string;
   cafeId?: string;
   cafeCity?: string;
+  branchId?: string;
+  branchLabel?: string;
   beverageName: string;
   category: BeverageCategory;
   date: string;
@@ -100,6 +102,13 @@ export interface IEntry {
   updatedAt: string;
 }
 
+export interface IBranch {
+  _id: string;
+  label: string;
+  city?: string;
+  address?: string;
+}
+
 export interface ICafe {
   _id: string;
   userId: string;
@@ -108,6 +117,7 @@ export interface ICafe {
   neighborhood?: string;
   tags: string[];
   isFavorite: boolean;
+  branches: IBranch[];
   createdAt: string;
   updatedAt: string;
 }
@@ -169,6 +179,7 @@ export interface CreateEntryInput {
   cafeName: string;
   cafeId?: string;
   cafeCity?: string;
+  branchLabel?: string;
   beverageName: string;
   category: BeverageCategory;
   date: string;

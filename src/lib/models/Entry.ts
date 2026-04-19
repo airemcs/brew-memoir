@@ -18,6 +18,8 @@ export interface IEntryDocument extends Document {
   basePrice: number;
   addOns: IAddOn[];
   totalPrice: number;
+  branchId?: Types.ObjectId;
+  branchLabel?: string;
   photoUrl?: string;
   rating: number;
   ratingNote?: string;
@@ -56,6 +58,8 @@ const EntrySchema = new Schema<IEntryDocument>(
     basePrice: { type: Number, required: true, min: 0 },
     addOns: { type: [AddOnSchema], default: [] },
     totalPrice: { type: Number, required: true, min: 0 },
+    branchId: { type: Schema.Types.ObjectId },
+    branchLabel: { type: String, trim: true },
     photoUrl: { type: String },
     rating: { type: Number, required: true, min: 1, max: 5 },
     ratingNote: { type: String },

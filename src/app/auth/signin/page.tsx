@@ -233,6 +233,12 @@ export default function SignInPage() {
         </div>
 
       </main>
+
+      <footer className="py-6 text-center">
+        <span className="text-[0.625rem] uppercase tracking-[0.2em] font-semibold text-on-surface-variant/30">
+          Brew Memoir v1.0.0
+        </span>
+      </footer>
     </div>
   );
 }

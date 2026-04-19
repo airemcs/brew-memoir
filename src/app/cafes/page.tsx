@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Types } from "mongoose";
+import CategoryDonut from "./CategoryDonut";
 import type { BeverageCategory, ICafeWithStats } from "@/types";
 import { connectDB } from "@/lib/db";
 import { Cafe, Entry } from "@/lib/models";
@@ -17,10 +18,6 @@ type CafeEntry = ICafeWithStats & {
 
 type CategorySlice = { category: string; percentage: number; count: number };
 
-const CATEGORY_COLORS = [
-  "bg-primary", "bg-secondary", "bg-tertiary",
-  "bg-primary/60", "bg-secondary/60", "bg-tertiary/60",
-];
 
 async function getCategoryBreakdown(userObjectId: Types.ObjectId): Promise<CategorySlice[]> {
   const agg = await Entry.aggregate([
@@ -296,20 +293,7 @@ export default async function CafesPage() {
                 Category Mix
               </h4>
               {categoryBreakdown.length > 0 ? (
-                <>
-                  <div className="flex gap-1 mb-2 rounded-full overflow-hidden h-1">
-                    {categoryBreakdown.map((c, i) => (
-                      <div
-                        key={c.category}
-                        className={`h-full ${CATEGORY_COLORS[i % CATEGORY_COLORS.length]}`}
-                        style={{ width: `${c.percentage}%` }}
-                      />
-                    ))}
-                  </div>
-                  <p className="text-xs text-on-surface-variant">
-                    {topCategory.percentage}% {topCategory.category}
-                  </p>
-                </>
+                <CategoryDonut slices={categoryBreakdown} />
               ) : (
                 <p className="text-xs text-on-surface-variant">No entries yet</p>
               )}

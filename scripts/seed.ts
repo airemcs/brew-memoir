@@ -180,7 +180,7 @@ const ENTRY_DEFS: EntryDef[] = [
   {
     cafeIdx: 3,
     beverageName: "Honey Lavender Latte",
-    category: "Specialty",
+    category: "Milk Tea",
     date: daysAgo(19),
     basePrice: 210,
     addOns: [{ name: "Oat Milk", category: "alternative", price: 60 }],

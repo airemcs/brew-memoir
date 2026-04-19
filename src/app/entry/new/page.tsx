@@ -18,7 +18,7 @@ const CATEGORY_ICON: Record<BeverageCategory, string> = {
   Chocolate: "icecream",
   "Frappe & Blended": "local_drink",
   "Fruit & Refresher": "blender",
-  Specialty: "auto_awesome",
+  "Milk Tea": "emoji_food_beverage",
 };
 
 // Short labels for the category grid — value stays as the full BeverageCategory
@@ -31,7 +31,7 @@ const CATEGORY_LABEL: Record<BeverageCategory, string> = {
   Chocolate: "Chocolate",
   "Frappe & Blended": "Frappe",
   "Fruit & Refresher": "Refresher",
-  Specialty: "Specialty",
+  "Milk Tea": "Milk Tea",
 };
 
 const ADDON_CATEGORY_ICON: Record<AddOnCategory, string> = {
@@ -196,6 +196,8 @@ export default function NewEntryPage() {
   const [addOns, setAddOns] = useState<AddOn[]>([]);
   const [seedCafes, setSeedCafes] = useState<string[]>([]);
   const [seedCities, setSeedCities] = useState<string[]>([]);
+  const [cafesData, setCafesData] = useState<{ _id: string; name: string; branches: { _id: string; label: string; city?: string }[] }[]>([]);
+  const [branchLabel, setBranchLabel] = useState("");
   const [showSheet, setShowSheet] = useState(false);
   const [sheetCategory, setSheetCategory] = useState<AddOnCategory>("alternative");
   const [sheetName, setSheetName] = useState("");
@@ -226,9 +228,12 @@ export default function NewEntryPage() {
     Promise.all([
       fetch("/api/cafes").then((r) => r.ok ? r.json() : []),
       fetch("/api/user/me").then((r) => r.ok ? r.json() : null),
-    ]).then(([cafes, me]: [{ name: string; address?: string }[], { email?: string } | null]) => {
+    ]).then(([cafes, me]: [{ _id: string; name: string; address?: string; branches: { _id: string; label: string; city?: string }[] }[], { email?: string } | null]) => {
+      setCafesData(cafes);
       setSeedCafes(cafes.map((c) => c.name));
-      setSeedCities(Array.from(new Set(cafes.map((c) => c.address ?? "").filter(Boolean))));
+      setSeedCities(Array.from(new Set(
+        cafes.flatMap((c) => c.branches.map((b) => b.city ?? "").concat(c.address ?? "")).filter(Boolean)
+      )));
       if (me?.email) setLsUserId(me.email);
     }).catch(() => {});
   }, []);
@@ -270,6 +275,7 @@ export default function NewEntryPage() {
         body: JSON.stringify({
           cafeName: cafeName.trim(),
           cafeCity: cafeCity.trim() || undefined,
+          branchLabel: branchLabel.trim() || undefined,
           beverageName: beverageName.trim(),
           category,
           date: new Date(date).toISOString(),
@@ -507,7 +513,7 @@ export default function NewEntryPage() {
                     <span className="material-symbols-outlined text-3xl mb-2">
                       {CATEGORY_ICON[cat]}
                     </span>
-                    <span className="text-sm font-semibold">{CATEGORY_LABEL[cat]}</span>
+                    <span className="text-sm font-semibold whitespace-nowrap">{CATEGORY_LABEL[cat]}</span>
                   </button>
                 );
               })}
@@ -570,12 +576,54 @@ export default function NewEntryPage() {
               </label>
               <AutocompleteInput
                 value={cafeName}
-                onChange={setCafeName}
+                onChange={(v) => { setCafeName(v); setBranchLabel(""); }}
                 seeds={seedCafes}
                 lsKey={`brew-memoir:${lsUserId}:cafes`}
                 placeholder="Yardstick Coffee"
               />
             </div>
+
+            {/* Branch picker — visible once a cafe name is entered */}
+            {cafeName.trim() && (() => {
+              const selectedCafe = cafesData.find((c) => c.name === cafeName);
+              const existingBranches = selectedCafe?.branches ?? [];
+              return (
+                <div>
+                  <label className="text-[0.75rem] uppercase tracking-widest font-bold text-on-surface-variant block mb-1">
+                    Branch <span className="normal-case font-normal text-outline-variant/60">(optional)</span>
+                  </label>
+                  {existingBranches.length > 0 && (
+                    <div className="flex flex-wrap gap-2 mt-2 mb-3">
+                      {existingBranches.map((b) => (
+                        <button
+                          key={b._id}
+                          type="button"
+                          onClick={() => {
+                            const next = branchLabel === b.label ? "" : b.label;
+                            setBranchLabel(next);
+                            if (next && b.city) setCafeCity(b.city);
+                          }}
+                          className={`px-3 py-1.5 rounded-full text-xs font-bold transition-all ${
+                            branchLabel === b.label
+                              ? "bg-secondary-container text-on-secondary-container"
+                              : "bg-surface-container-low text-on-surface-variant hover:bg-surface-container-high"
+                          }`}
+                        >
+                          {b.label}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                  <input
+                    type="text"
+                    value={branchLabel}
+                    onChange={(e) => setBranchLabel(e.target.value)}
+                    placeholder={existingBranches.length > 0 ? "Or add new branch…" : "e.g. BGC, SM Megamall"}
+                    className="w-full bg-transparent border-0 border-b border-outline-variant/30 focus:border-primary focus:ring-0 focus:outline-none py-3 px-0 text-xl font-medium placeholder:text-outline-variant/50 transition-colors duration-300"
+                  />
+                </div>
+              );
+            })()}
 
             <div>
               <label className="text-[0.75rem] uppercase tracking-widest font-bold text-on-surface-variant block mb-1">

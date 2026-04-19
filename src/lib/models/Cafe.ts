@@ -1,5 +1,12 @@
 import { Schema, model, models, type Document, type Types } from "mongoose";
 
+export interface IBranchDocument {
+  _id: Types.ObjectId;
+  label: string;
+  city?: string;
+  address?: string;
+}
+
 export interface ICafeDocument extends Document {
   userId: Types.ObjectId;
   name: string;
@@ -7,9 +14,19 @@ export interface ICafeDocument extends Document {
   neighborhood?: string;
   tags: string[];
   isFavorite: boolean;
+  branches: IBranchDocument[];
   createdAt: Date;
   updatedAt: Date;
 }
+
+const BranchSchema = new Schema<IBranchDocument>(
+  {
+    label: { type: String, required: true, trim: true },
+    city: { type: String, trim: true },
+    address: { type: String, trim: true },
+  },
+  { _id: true }
+);
 
 const CafeSchema = new Schema<ICafeDocument>(
   {
@@ -19,6 +36,7 @@ const CafeSchema = new Schema<ICafeDocument>(
     neighborhood: { type: String, trim: true },
     tags: { type: [String], default: [] },
     isFavorite: { type: Boolean, default: false },
+    branches: { type: [BranchSchema], default: [] },
   },
   { timestamps: true }
 );

@@ -12,10 +12,15 @@ export const authOptions: AuthOptions = {
   adapter: MongoDBAdapter(clientPromise) as AuthOptions["adapter"],
 
   providers: [
-    GoogleProvider({
-      clientId: process.env.GOOGLE_CLIENT_ID!,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-    }),
+    // Only register GoogleProvider when credentials are present.
+    // Without this guard, initializing with undefined values throws at runtime
+    // if someone navigates to the Google OAuth callback URL.
+    ...(process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET
+      ? [GoogleProvider({
+          clientId: process.env.GOOGLE_CLIENT_ID,
+          clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+        })]
+      : []),
 
     CredentialsProvider({
       name: "Email & Password",
@@ -25,9 +30,15 @@ export const authOptions: AuthOptions = {
       },
       async authorize(credentials, req) {
         if (signinLimiter) {
-          const ip = getIp(req.headers as Record<string, string | string[] | undefined>);
-          const { success } = await signinLimiter.limit(ip);
-          if (!success) throw new Error("Too many sign-in attempts. Try again in 15 minutes.");
+          try {
+            const ip = getIp(req.headers as Record<string, string | string[] | undefined>);
+            const { success } = await signinLimiter.limit(ip);
+            if (!success) throw new Error("Too many sign-in attempts. Try again in 15 minutes.");
+          } catch (err) {
+            // Re-throw rate limit rejections; swallow Upstash connection errors (fail open).
+            if (err instanceof Error && err.message.startsWith("Too many")) throw err;
+            console.error("[signin] rate limit check failed:", err);
+          }
         }
 
         if (!credentials?.email || !credentials?.password) return null;

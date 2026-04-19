@@ -203,7 +203,7 @@ const CATEGORY_ICON: Record<BeverageCategory, string> = {
   Chocolate: "coffee",
   "Frappe & Blended": "local_drink",
   "Fruit & Refresher": "local_drink",
-  Specialty: "local_cafe",
+  "Milk Tea": "emoji_food_beverage",
 };
 
 function Stars({ rating }: { rating: number }) {

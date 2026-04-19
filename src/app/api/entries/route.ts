@@ -55,7 +55,7 @@ export async function GET(req: NextRequest) {
 
   const [entries, total] = await Promise.all([
     Entry.find(filter)
-      .sort({ date: -1 })
+      .sort({ date: -1, createdAt: -1 })
       .skip((page - 1) * limit)
       .limit(limit)
       .lean(),
@@ -126,10 +126,30 @@ export async function POST(req: NextRequest) {
     { upsert: true, new: true }
   );
 
+  // Upsert branch: find existing by label (case-insensitive) or push a new one
+  let branchId: import("mongoose").Types.ObjectId | undefined;
+  if (data.branchLabel?.trim()) {
+    const label = data.branchLabel.trim();
+    const labelLower = label.toLowerCase();
+    const existing = cafe.branches?.find((b) => b.label.toLowerCase() === labelLower);
+    if (existing) {
+      branchId = existing._id;
+    } else {
+      const updated = await Cafe.findByIdAndUpdate(
+        cafe._id,
+        { $push: { branches: { label, city: data.cafeCity || undefined } } },
+        { new: true }
+      );
+      branchId = updated?.branches.find((b) => b.label.toLowerCase() === labelLower)?._id;
+    }
+  }
+
   const entry = await Entry.create({
     ...data,
     userId: userObjectId,
     cafeId: cafe._id,
+    branchId,
+    branchLabel: data.branchLabel?.trim() || undefined,
     totalPrice,
     date: new Date(data.date),
   });
