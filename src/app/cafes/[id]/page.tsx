@@ -5,7 +5,7 @@ import type { BeverageCategory, IBranch, IEntry } from "@/types";
 import { connectDB } from "@/lib/db";
 import { Cafe, Entry } from "@/lib/models";
 import { getServerUserId } from "@/lib/serverAuth";
-import DeleteCafeButton from "./DeleteCafeButton";
+import CafeDetailHeader from "./CafeDetailHeader";
 
 // ---------------------------------------------------------------------------
 // Data layer
@@ -172,25 +172,13 @@ export default async function CafeDetailPage({ params }: { params: Promise<{ id:
   return (
     <>
       {/* ── Top App Bar ── */}
-      <header className="fixed top-0 left-0 w-full z-50 bg-surface flex justify-between items-center px-6 py-4">
-        <div className="flex items-center gap-3">
-          <Link
-            href="/cafes"
-            className="flex items-center justify-center p-2 rounded-full hover:bg-surface-container transition-colors"
-            aria-label="Back"
-          >
-            <span className="material-symbols-outlined text-primary text-xl">arrow_back</span>
-          </Link>
-          <h1 className="text-base font-bold tracking-[-0.02em] text-primary">Brew Memoir</h1>
-        </div>
-        <DeleteCafeButton cafeId={cafe._id} totalEntries={cafe.totalVisits} />
-      </header>
+      <CafeDetailHeader cafeId={cafe._id} totalEntries={cafe.totalVisits} />
 
       {/* ── Main ── */}
-      <main className="pt-16 pb-32 px-6 max-w-2xl mx-auto">
+      <main className="pb-32 px-6 max-w-2xl mx-auto">
 
-        {/* Header */}
-        <section className="pt-6 mb-8">
+        {/* Sticky cafe name */}
+        <section className="sticky top-0 z-40 bg-surface pt-6 pb-4 -mx-6 px-6 border-b border-outline-variant/10">
           <h2 className="text-3xl font-extrabold tracking-tight text-on-surface mb-1">{cafe.name}</h2>
           <div className="flex items-center gap-1.5 text-on-surface-variant">
             <span className="material-symbols-outlined text-sm">location_on</span>
