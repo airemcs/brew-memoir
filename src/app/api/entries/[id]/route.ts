@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { Types } from "mongoose";
 import { getAuthSession } from "@/lib/session";
 import { connectDB } from "@/lib/db";
-import { Entry } from "@/lib/models";
+import { Entry, Cafe } from "@/lib/models";
 import { deleteImage, getPublicId } from "@/lib/cloudinary";
 
 const DEV_USER_ID = "000000000000000000000001";
@@ -95,6 +95,18 @@ export async function DELETE(
   }
 
   await Entry.findByIdAndDelete(id);
+
+  // Clean up the cafe if it's now empty and hasn't been customized
+  if (entry.cafeId) {
+    const remaining = await Entry.countDocuments({ cafeId: entry.cafeId });
+    if (remaining === 0) {
+      await Cafe.deleteOne({
+        _id: entry.cafeId,
+        isFavorite: false,
+        tags: { $size: 0 },
+      });
+    }
+  }
 
   return new NextResponse(null, { status: 204 });
 }

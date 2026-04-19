@@ -106,12 +106,14 @@ function AutocompleteInput({
   seeds,
   lsKey,
   placeholder,
+  persistOnBlur = true,
 }: {
   value: string;
   onChange: (v: string) => void;
   seeds: string[];
   lsKey: string;
   placeholder: string;
+  persistOnBlur?: boolean;
 }) {
   const [open, setOpen] = useState(false);
   const [all, setAll] = useState<string[]>(seeds);
@@ -140,6 +142,7 @@ function AutocompleteInput({
   }
 
   function handleBlurSave() {
+    if (!persistOnBlur) return;
     const trimmed = value.trim();
     if (!trimmed) return;
     try {
@@ -292,6 +295,22 @@ export default function NewEntryPage() {
         const err = await res.json();
         throw new Error(err.error ?? "Failed to save entry");
       }
+
+      // Persist cafe name and city to localStorage only on success
+      try {
+        const cafeKey = `brew-memoir:${lsUserId}:cafes`;
+        const storedCafes = JSON.parse(localStorage.getItem(cafeKey) ?? "[]") as string[];
+        if (!storedCafes.includes(cafeName.trim())) {
+          localStorage.setItem(cafeKey, JSON.stringify([cafeName.trim(), ...storedCafes]));
+        }
+        if (cafeCity.trim()) {
+          const cityKey = `brew-memoir:${lsUserId}:cities`;
+          const storedCities = JSON.parse(localStorage.getItem(cityKey) ?? "[]") as string[];
+          if (!storedCities.includes(cafeCity.trim())) {
+            localStorage.setItem(cityKey, JSON.stringify([cafeCity.trim(), ...storedCities]));
+          }
+        }
+      } catch { /* ignore */ }
 
       setSubmitted(true);
     } catch (err) {
@@ -580,6 +599,7 @@ export default function NewEntryPage() {
                 seeds={seedCafes}
                 lsKey={`brew-memoir:${lsUserId}:cafes`}
                 placeholder="Yardstick Coffee"
+                persistOnBlur={false}
               />
             </div>
 
@@ -635,6 +655,7 @@ export default function NewEntryPage() {
                 seeds={seedCities}
                 lsKey={`brew-memoir:${lsUserId}:cities`}
                 placeholder="Makati, Metro Manila"
+                persistOnBlur={false}
               />
             </div>
 
