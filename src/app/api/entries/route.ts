@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { Types } from "mongoose";
-import { getAuthSession } from "@/lib/session";
+import { getRouteUserId } from "@/lib/session";
 import { connectDB } from "@/lib/db";
 import { Entry, Cafe } from "@/lib/models";
 import { CreateEntrySchema, validate } from "@/lib/validation";
@@ -20,25 +20,10 @@ import type { BeverageCategory } from "@/types";
 // Response: { entries, total, page, totalPages }
 // ---------------------------------------------------------------------------
 
-// Dev-only placeholder userId — valid ObjectId format, used when BYPASS_AUTH=true.
-const DEV_USER_ID = "000000000000000000000001";
-
-function isBypassAuth() {
-  return process.env.BYPASS_AUTH === "true" && process.env.NODE_ENV !== "production";
-}
 
 export async function GET(req: NextRequest) {
-  let userId: string;
-  try {
-    const session = await getAuthSession();
-    userId = session.user.id;
-  } catch {
-    if (isBypassAuth()) {
-      userId = DEV_USER_ID;
-    } else {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-  }
+  const userId = await getRouteUserId();
+  if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   await connectDB();
 
@@ -83,17 +68,8 @@ export async function GET(req: NextRequest) {
 // ---------------------------------------------------------------------------
 
 export async function POST(req: NextRequest) {
-  let userId: string;
-  try {
-    const session = await getAuthSession();
-    userId = session.user.id;
-  } catch {
-    if (isBypassAuth()) {
-      userId = DEV_USER_ID;
-    } else {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-  }
+  const userId = await getRouteUserId();
+  if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const body = await req.json().catch(() => null);
   const parsed = validate(CreateEntrySchema, body);

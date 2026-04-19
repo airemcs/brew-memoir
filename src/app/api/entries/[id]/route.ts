@@ -1,23 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { Types } from "mongoose";
-import { getAuthSession } from "@/lib/session";
+import { getRouteUserId } from "@/lib/session";
 import { connectDB } from "@/lib/db";
 import { Entry, Cafe } from "@/lib/models";
 import { deleteImage, getPublicId } from "@/lib/cloudinary";
 
-const DEV_USER_ID = "000000000000000000000001";
-function isBypassAuth() {
-  return process.env.BYPASS_AUTH === "true" && process.env.NODE_ENV !== "production";
-}
-
-async function getUserId(): Promise<string | null> {
-  try {
-    const session = await getAuthSession();
-    return session.user.id;
-  } catch {
-    return isBypassAuth() ? DEV_USER_ID : null;
-  }
-}
 
 // ---------------------------------------------------------------------------
 // Shared ownership guard
@@ -52,7 +39,7 @@ export async function GET(
   _req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const userId = await getUserId();
+  const userId = await getRouteUserId();
   if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   await connectDB();
@@ -74,7 +61,7 @@ export async function DELETE(
   _req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const userId = await getUserId();
+  const userId = await getRouteUserId();
   if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   await connectDB();

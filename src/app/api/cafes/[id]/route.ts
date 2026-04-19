@@ -1,13 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { Types } from "mongoose";
-import { getAuthSession } from "@/lib/session";
+import { getRouteUserId } from "@/lib/session";
 import { connectDB } from "@/lib/db";
 import { Cafe, Entry } from "@/lib/models";
+import { deleteImage, getPublicId } from "@/lib/cloudinary";
 
-const DEV_USER_ID = "000000000000000000000001";
-function isBypassAuth() {
-  return process.env.BYPASS_AUTH === "true" && process.env.NODE_ENV !== "production";
-}
 
 // ---------------------------------------------------------------------------
 // GET /api/cafes/[id]
@@ -26,17 +23,8 @@ export async function GET(
   _req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  let userId: string;
-  try {
-    const session = await getAuthSession();
-    userId = session.user.id;
-  } catch {
-    if (isBypassAuth()) {
-      userId = DEV_USER_ID;
-    } else {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-  }
+  const userId = await getRouteUserId();
+  if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const { id } = await params;
 
@@ -111,4 +99,41 @@ export async function GET(
     visitsByDay,
     weeklyAverage,
   });
+}
+
+// ---------------------------------------------------------------------------
+// DELETE /api/cafes/[id]
+//
+// Deletes the cafe and all its entries (including Cloudinary photos).
+// ---------------------------------------------------------------------------
+
+export async function DELETE(
+  _req: NextRequest,
+  { params }: { params: Promise<{ id: string }> }
+) {
+  const userId = await getRouteUserId();
+  if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+
+  const { id } = await params;
+  if (!Types.ObjectId.isValid(id)) {
+    return NextResponse.json({ error: "Invalid cafe ID" }, { status: 400 });
+  }
+
+  await connectDB();
+  const userObjectId = new Types.ObjectId(userId);
+  const cafeObjectId = new Types.ObjectId(id);
+
+  const cafe = await Cafe.findOne({ _id: cafeObjectId, userId: userObjectId }).lean();
+  if (!cafe) return NextResponse.json({ error: "Cafe not found" }, { status: 404 });
+
+  // Clean up Cloudinary photos for all entries belonging to this cafe
+  const entries = await Entry.find({ cafeId: cafeObjectId, userId: userObjectId }).lean();
+  await Promise.allSettled(
+    entries.filter((e) => e.photoUrl).map((e) => deleteImage(getPublicId(e.photoUrl!)))
+  );
+
+  await Entry.deleteMany({ cafeId: cafeObjectId, userId: userObjectId });
+  await Cafe.findByIdAndDelete(cafeObjectId);
+
+  return new NextResponse(null, { status: 204 });
 }

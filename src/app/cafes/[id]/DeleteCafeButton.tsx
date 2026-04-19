@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
-export default function DeleteEntryButton({ entryId }: { entryId: string }) {
+export default function DeleteCafeButton({ cafeId, totalEntries }: { cafeId: string; totalEntries: number }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -20,9 +20,9 @@ export default function DeleteEntryButton({ entryId }: { entryId: string }) {
 
   async function handleDelete() {
     setLoading(true);
-    const res = await fetch(`/api/entries/${entryId}`, { method: "DELETE" });
+    const res = await fetch(`/api/cafes/${cafeId}`, { method: "DELETE" });
     if (res.ok) {
-      router.push("/");
+      router.push("/cafes");
       router.refresh();
     } else {
       setLoading(false);
@@ -33,8 +33,8 @@ export default function DeleteEntryButton({ entryId }: { entryId: string }) {
   return (
     <>
       <button
+        aria-label="Delete cafe"
         onClick={() => setOpen(true)}
-        aria-label="Delete entry"
         className="p-2 rounded-full hover:bg-surface-container transition-colors text-on-surface-variant hover:text-error"
       >
         <span className="material-symbols-outlined text-xl">delete</span>
@@ -51,10 +51,14 @@ export default function DeleteEntryButton({ entryId }: { entryId: string }) {
 
             <div className="space-y-1">
               <h2 className="text-xl font-extrabold tracking-tight text-on-background">
-                Delete Entry?
+                Delete Cafe?
               </h2>
               <p className="text-sm text-on-surface-variant leading-relaxed">
-                This brew log will be permanently removed from your archive. This cannot be undone.
+                This will permanently remove{" "}
+                <span className="font-bold text-on-surface">
+                  {totalEntries} {totalEntries === 1 ? "brew log" : "brew logs"}
+                </span>{" "}
+                along with the cafe. This cannot be undone.
               </p>
             </div>
 
@@ -71,7 +75,7 @@ export default function DeleteEntryButton({ entryId }: { entryId: string }) {
                     Deleting…
                   </>
                 ) : (
-                  "Delete Entry"
+                  "Delete Cafe"
                 )}
               </button>
               <button

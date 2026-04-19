@@ -5,6 +5,7 @@ import type { BeverageCategory, IBranch, IEntry } from "@/types";
 import { connectDB } from "@/lib/db";
 import { Cafe, Entry } from "@/lib/models";
 import { getServerUserId } from "@/lib/serverAuth";
+import DeleteCafeButton from "./DeleteCafeButton";
 
 // ---------------------------------------------------------------------------
 // Data layer
@@ -182,12 +183,7 @@ export default async function CafeDetailPage({ params }: { params: Promise<{ id:
           </Link>
           <h1 className="text-base font-bold tracking-[-0.02em] text-primary">Brew Memoir</h1>
         </div>
-        <button
-          aria-label="More options"
-          className="p-2 rounded-full hover:bg-surface-container transition-colors"
-        >
-          <span className="material-symbols-outlined text-on-surface-variant text-xl">more_vert</span>
-        </button>
+        <DeleteCafeButton cafeId={cafe._id} totalEntries={cafe.totalVisits} />
       </header>
 
       {/* ── Main ── */}

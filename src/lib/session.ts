@@ -36,3 +36,25 @@ export async function getAuthSession(): Promise<AuthSession> {
 
   return session as AuthSession;
 }
+
+// ---------------------------------------------------------------------------
+// getRouteUserId
+//
+// For use in Route Handlers only. Returns the authenticated user's MongoDB _id,
+// or the dev placeholder when BYPASS_AUTH=true in non-production.
+// Returns null when unauthenticated — callers should return a 401.
+// ---------------------------------------------------------------------------
+
+const DEV_USER_ID = "000000000000000000000001";
+
+export async function getRouteUserId(): Promise<string | null> {
+  try {
+    const session = await getAuthSession();
+    return session.user.id;
+  } catch {
+    if (process.env.BYPASS_AUTH === "true" && process.env.NODE_ENV !== "production") {
+      return DEV_USER_ID;
+    }
+    return null;
+  }
+}
